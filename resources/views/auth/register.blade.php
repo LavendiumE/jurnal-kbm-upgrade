@@ -1,5 +1,20 @@
 <x-guest-layout>
     <div class="max-w-md mx-auto">
+
+        {{-- STATUS SUCCESS --}}
+        @if (session('status'))
+            <div class="mb-4 p-3 text-sm text-green-700 bg-green-100 rounded">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        {{-- ERROR GLOBAL --}}
+        @if ($errors->any())
+            <div class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         <h1 class="text-2xl font-semibold text-gray-800 mb-1">
             Register
         </h1>

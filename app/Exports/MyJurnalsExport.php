@@ -10,23 +10,23 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
 class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
 {
-    protected int $userId;
+    protected int $guruId;
     protected $tanggalAwal;
     protected $tanggalAkhir;
 
-    public function __construct(int $userId, $tanggalAwal = null, $tanggalAkhir = null)
+    public function __construct(int $guruId, $tanggalAwal = null, $tanggalAkhir = null)
     {
-        $this->userId       = $userId;
+        $this->guruId       = $guruId;
         $this->tanggalAwal  = $tanggalAwal;
         $this->tanggalAkhir = $tanggalAkhir;
     }
 
     public function collection(): Collection
     {
-        $query = Jurnal::where('user_id', $this->userId)
+        $query = Jurnal::with(['guru.user', 'kelas', 'jadwal'])
+            ->where('guru_id', $this->guruId)
             ->orderBy('tanggal_kbm', 'asc');
 
-        // 🔒 Filter range tanggal (opsional)
         if ($this->tanggalAwal && $this->tanggalAkhir) {
             $query->whereBetween('tanggal_kbm', [
                 $this->tanggalAwal,
@@ -36,24 +36,25 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
 
         return $query->get()->map(function ($jurnal) {
 
-            $fotoUrl = $jurnal->dokumentasi
-                ? asset('storage/' . $jurnal->dokumentasi)
+            $fotoUrl = $jurnal->foto
+                ? asset('storage/' . $jurnal->foto)
                 : '';
 
             return [
                 'Tanggal'        => optional($jurnal->tanggal_kbm)->format('d-m-Y'),
-                'Jam Mulai'      => $jurnal->jam_mulai,
-                'Jam Selesai'    => $jurnal->jam_selesai,
-                'Kelas'          => $jurnal->kelas,
-                'ruang'          => $jurnal->ruang,
-                'Guru'           => $jurnal->guru,
-                'Mata Pelajaran' => $jurnal->mata_pelajaran,
+                'Jam Mulai'      => $jurnal->jadwal->jam_mulai ?? '-',
+                'Jam Selesai'    => $jurnal->jadwal->jam_selesai ?? '-',
+                'Kelas'          => $jurnal->kelas->nama ?? '-',
+                'Ruang'          => $jurnal->jadwal->ruangan->nama ?? '-',
+                'Guru'           => $jurnal->guru->nama ?? '-',
+                'Mata Pelajaran' => $jurnal->jadwal->mapel->nama ?? '-',
                 'Materi'         => $jurnal->materi,
                 'Kegiatan'       => $jurnal->kegiatan,
                 'Hadir'          => $jurnal->hadir,
                 'Izin'           => $jurnal->izin,
                 'Sakit'          => $jurnal->sakit,
                 'Alfa'           => $jurnal->alfa,
+                'PKL'            => $jurnal->pkl,
                 'Foto'           => $fotoUrl,
             ];
         });
@@ -66,7 +67,7 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Jam Mulai',
             'Jam Selesai',
             'Kelas',
-            'ruang',
+            'Ruang',
             'Guru',
             'Mata Pelajaran',
             'Materi',
@@ -75,6 +76,7 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Izin',
             'Sakit',
             'Alfa',
+            'PKL',
             'Foto',
         ];
     }

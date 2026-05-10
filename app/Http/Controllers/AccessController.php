@@ -11,21 +11,27 @@ class AccessController extends Controller
         return view('access');
     }
 
+    
     public function check(Request $request)
     {
         $request->validate([
             'code' => 'required'
         ]);
 
-        if ($request->code !== env('ACCESS_CODE')) {
+        if (trim($request->code) !== trim(env('ACCESS_CODE'))) {
             return back()->withErrors([
                 'code' => 'Access code salah'
             ]);
         }
 
-        session(['access_granted' => true]);
+        session()->put('access_granted', true);
+        session()->save();
 
         return redirect()->route('login');
     }
+
+
+
+
 }
 

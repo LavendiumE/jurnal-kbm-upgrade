@@ -3,252 +3,167 @@
 namespace App\Http\Controllers;
 
 use App\Models\Jurnal;
+use App\Models\Guru;
+use App\Models\Jadwal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AllJurnalsExport;
 use App\Exports\MyJurnalsExport;
-use Maatwebsite\Excel\Facades\Excel;
-use Intervention\Image\ImageManager;
-use Intervention\Image\Drivers\Gd\Driver;
-use Illuminate\Support\Facades\Storage;
-
+use App\Models\Informasi;
 
 class JurnalController extends Controller
 {
     public function index()
     {
-        $jurnals = Jurnal::orderBy('tanggal_kbm', 'desc')
-            ->paginate(10);
+        if (auth()->user()->hasRole('admin')) {
+            $jurnals = Jurnal::latest()->paginate(10);
+        } else {
+            $guru = Guru::where('user_id', auth()->id())->first();
 
-        return view('jurnals.index', compact('jurnals'));
+            if (!$guru) {
+                return back()->with('error', 'Akun guru belum terhubung ke data guru');
+            }
+
+            $jurnals = Jurnal::where('guru_id', $guru->id)
+                ->latest()
+                ->paginate(10);
+        }
+
+        $informasi = Informasi::latest()->first();
+
+        return view('guru.jurnals.index', compact('jurnals', 'informasi'));
     }
 
     public function create()
     {
-        return view('jurnals.create');
+        $guru = Guru::where('user_id', auth()->id())->first();
+
+        if (!$guru) {
+            return back()->with('error', 'Akun guru belum terhubung ke data guru');
+        }
+
+        $jadwals = Jadwal::with(['kelas', 'mapel', 'ruangan'])
+            ->where('guru_id', $guru->id)
+            ->orderBy('hari')
+            ->orderBy('jam_ke')
+            ->get();
+
+        return view('guru.jurnals.create', compact('jadwals'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'tanggal_kbm'    => 'required|date',
-            'kelas'          => 'required|string',
-            'ruang'          => 'required|string',
-            'mata_pelajaran' => 'required|string',
-            'materi'         => 'required|string',
-            'kegiatan'       => 'nullable|string',
-            'jam_mulai'      => 'required',
-            'jam_selesai'    => 'required',
-
+            'jadwal_id' => 'required',
+            'materi' => 'required',
+            'kegiatan' => 'required',
             'hadir' => 'required|integer',
-
-            'izin'  => 'nullable',
-            'sakit' => 'nullable',
-            'alfa'  => 'nullable',
-
-            'dokumentasi' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
+            'izin' => 'nullable|string',
+            'sakit' => 'nullable|string',
+            'alfa' => 'nullable|string',
+            'pkl' => 'nullable|string',
+            'foto' => 'nullable|image|max:2048',
+            'file_izin_guru' => 'nullable|file|max:2048',
         ]);
 
-        $validated['user_id'] = auth()->id();
-        $validated['guru']    = auth()->user()->name;
+        $guru = Guru::where('user_id', Auth::id())->first();
+        $jadwal = Jadwal::findOrFail($request->jadwal_id);
 
-        // UPLOAD + AUTO COMPRESS FOTO (NATIVE PHP GD)
-        if ($request->hasFile('dokumentasi')) {
+        $validated['guru_id'] = $guru->id;
+        $validated['kelas_id'] = $jadwal->kelas_id;
+        $validated['jadwal_id'] = $jadwal->id;
+        $validated['tipe'] = 'guru';
 
-            $file = $request->file('dokumentasi');
-
-            // Ambil info gambar
-            $imageInfo = getimagesize($file->getPathname());
-            $mime = $imageInfo['mime'];
-
-            // Buat image resource
-            if ($mime === 'image/jpeg') {
-                $source = imagecreatefromjpeg($file->getPathname());
-            } elseif ($mime === 'image/png') {
-                $source = imagecreatefrompng($file->getPathname());
-            } else {
-                throw new \Exception('Format gambar tidak didukung');
-            }
-
-            $width  = imagesx($source);
-            $height = imagesy($source);
-
-            // Resize (max width 1280)
-            $newWidth  = 1280;
-            $newHeight = intval($height * ($newWidth / $width));
-
-            if ($width < 1280) {
-                $newWidth  = $width;
-                $newHeight = $height;
-            }
-
-            $canvas = imagecreatetruecolor($newWidth, $newHeight);
-            imagecopyresampled(
-                $canvas,
-                $source,
-                0, 0, 0, 0,
-                $newWidth,
-                $newHeight,
-                $width,
-                $height
-            );
-
-            // Simpan hasil compress
-            $folder = 'jurnal-photo/' . now()->format('Y-m');
-            $filename = uniqid('jurnal_') . '.jpg';
-
-            ob_start();
-            imagejpeg($canvas, null, 75); // QUALITY 75%
-            $imageData = ob_get_clean();
-
-            \Storage::disk('public')->put($folder . '/' . $filename, $imageData);
-
-            imagedestroy($source);
-            imagedestroy($canvas);
-
-            $validated['dokumentasi'] = $folder . '/' . $filename;
+        if ($request->hasFile('foto')) {
+            $validated['foto'] = $request->file('foto')->store('jurnal-guru', 'public');
         }
-
-
-
-
 
         Jurnal::create($validated);
 
         return redirect()
-            ->route('jurnals.index')
+            ->route('guru.jurnals.index')
             ->with('success', 'Jurnal berhasil ditambahkan');
     }
 
-
     public function edit(Jurnal $jurnal)
     {
-        return view('jurnals.edit', compact('jurnal'));
+        return view('guru.jurnals.edit', compact('jurnal'));
     }
 
     public function update(Request $request, Jurnal $jurnal)
     {
         $validated = $request->validate([
-            'tanggal_kbm'    => 'required|date',
-            'kelas'          => 'required|string',
-            'ruang'          => 'required|string',
-            'mata_pelajaran' => 'required|string',
-            'materi'         => 'required|string',
-            'kegiatan'       => 'nullable|string',
-            'jam_mulai'      => 'required',
-            'jam_selesai'    => 'required',
-
-            // KEHADIRAN
-            'hadir' => 'required|integer',
-
-
-            'izin'  => 'nullable',
-            'sakit' => 'nullable',
-            'alfa'  => 'nullable',
-
-            'dokumentasi' => 'nullable|image|max:10240',
+            'materi' => 'required|string',
+            'kegiatan' => 'nullable|string',
+            'hadir' => 'nullable|integer|min:0',
+            'izin' => 'nullable|integer|min:0',
+            'sakit' => 'nullable|integer|min:0',
+            'alfa' => 'nullable|integer|min:0',
+            'pkl' => 'nullable|string',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
+            'file_izin_guru' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
-        $validated['guru'] = auth()->user()->name;
-
-       // UPLOAD + AUTO COMPRESS FOTO (NATIVE PHP GD)
-        if ($request->hasFile('dokumentasi')) {
-
-            $file = $request->file('dokumentasi');
-
-            // Ambil info gambar
-            $imageInfo = getimagesize($file->getPathname());
-            $mime = $imageInfo['mime'];
-
-            // Buat image resource
-            if ($mime === 'image/jpeg') {
-                $source = imagecreatefromjpeg($file->getPathname());
-            } elseif ($mime === 'image/png') {
-                $source = imagecreatefrompng($file->getPathname());
-            } else {
-                throw new \Exception('Format gambar tidak didukung');
+        if ($request->hasFile('foto')) {
+            if ($jurnal->foto) {
+                Storage::disk('public')->delete($jurnal->foto);
             }
 
-            $width  = imagesx($source);
-            $height = imagesy($source);
-
-            // Resize (max width 1280)
-            $newWidth  = 1280;
-            $newHeight = intval($height * ($newWidth / $width));
-
-            if ($width < 1280) {
-                $newWidth  = $width;
-                $newHeight = $height;
-            }
-
-            $canvas = imagecreatetruecolor($newWidth, $newHeight);
-            imagecopyresampled(
-                $canvas,
-                $source,
-                0, 0, 0, 0,
-                $newWidth,
-                $newHeight,
-                $width,
-                $height
-            );
-
-            // Simpan hasil compress
-            $folder = 'jurnal-photo/' . now()->format('Y-m');
-            $filename = uniqid('jurnal_') . '.jpg';
-
-            ob_start();
-            imagejpeg($canvas, null, 75); // QUALITY 75%
-            $imageData = ob_get_clean();
-
-            \Storage::disk('public')->put($folder . '/' . $filename, $imageData);
-
-            imagedestroy($source);
-            imagedestroy($canvas);
-
-            $validated['dokumentasi'] = $folder . '/' . $filename;
+            $validated['foto'] = $request->file('foto')->store('jurnal-guru', 'public');
         }
 
+        if ($request->hasFile('file_izin_guru')) {
+            if ($jurnal->file_izin_guru) {
+                Storage::disk('public')->delete($jurnal->file_izin_guru);
+            }
 
-        unset($validated['izin'], $validated['sakit'], $validated['alfa']);
+            $validated['file_izin_guru'] = $request->file('file_izin_guru')->store('izin-guru', 'public');
+        }
+
         $jurnal->update($validated);
 
-
         return redirect()
-            ->route('jurnals.index')
+            ->route('guru.jurnals.index')
             ->with('success', 'Jurnal berhasil diupdate');
     }
 
     public function destroy(Jurnal $jurnal)
     {
+        // Hapus file foto kalau ada
+        if ($jurnal->foto) {
+            Storage::disk('public')->delete($jurnal->foto);
+        }
+
+        // Hapus file izin guru kalau ada
+        if ($jurnal->file_izin_guru) {
+            Storage::disk('public')->delete($jurnal->file_izin_guru);
+        }
+
+        // Hapus jurnal
         $jurnal->delete();
 
         return redirect()
-            ->route('jurnals.index')
+            ->route('guru.jurnals.index')
             ->with('success', 'Jurnal berhasil dihapus');
     }
 
-   public function exportMine(Request $request)
+    public function exportMine(Request $request)
     {
+        $guru = Guru::where('user_id', auth()->id())->first();
+
+        if (!$guru) {
+            return back()->with('error', 'Akun guru belum terhubung ke data guru');
+        }
+
         return Excel::download(
             new MyJurnalsExport(
-                auth()->id(),
+                $guru->id,
                 $request->tanggal_awal,
                 $request->tanggal_akhir
             ),
-            'jurnal_saya_' . now()->format('Y-m-d') . '.xlsx'
+            'jurnal-saya.xlsx'
         );
     }
-
-
-    public function exportAll(Request $request)
-    {
-        return Excel::download(
-            new AllJurnalsExport(
-                $request->tanggal_awal,
-                $request->tanggal_akhir
-            ),
-            'semua_jurnal_' . now()->format('Y-m-d') . '.xlsx'
-        );
-    }
-
 }

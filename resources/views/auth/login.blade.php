@@ -1,5 +1,20 @@
 <x-guest-layout>
     <div class="max-w-md mx-auto">
+
+        {{-- STATUS SUCCESS --}}
+        @if (session('status'))
+            <div class="mb-4 p-3 text-sm text-green-700 bg-green-100 rounded">
+                {{ session('status') }}
+            </div>
+        @endif
+
+        {{-- ERROR GLOBAL --}}
+        @if ($errors->any())
+            <div class="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded">
+                {{ $errors->first() }}
+            </div>
+        @endif
+
         <h1 class="text-2xl font-semibold text-gray-800 mb-1">
             Login
         </h1>
@@ -7,7 +22,11 @@
             Masuk untuk melanjutkan ke aplikasi
         </p>
 
-        <x-auth-session-status class="mb-4" :status="session('status')" />
+        @if(session('error'))
+        <div style="color:red; margin-bottom:10px;">
+            {{ session('error') }}
+        </div>
+        @endif
 
         <form method="POST" action="{{ route('login') }}" class="space-y-4">
             @csrf
@@ -39,7 +58,6 @@
                 />
                 <x-input-error :messages="$errors->get('password')" class="mt-1" />
 
-                <!-- Show password -->
                 <label class="flex items-center mt-2 text-sm text-gray-600">
                     <input type="checkbox" onclick="togglePassword('password')" class="mr-2">
                     Tampilkan password
@@ -52,7 +70,6 @@
                     <input type="checkbox" name="remember" class="mr-2">
                     Remember me
                 </label>
-
             </div>
 
             <!-- Actions -->

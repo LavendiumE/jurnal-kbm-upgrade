@@ -11,7 +11,7 @@ class AccessGate
     public function handle(Request $request, Closure $next)
     {
         if (!session()->has('access_granted')) {
-            return redirect()->route('access.form');
+            return redirect()->route('access.index');
         }
 
         return $next($request);

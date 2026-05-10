@@ -20,10 +20,9 @@ class AllJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
 
     public function collection()
     {
-        $query = Jurnal::with('user')
+        $query = Jurnal::with(['guru.user', 'kelas', 'jadwal'])
             ->orderBy('tanggal_kbm', 'asc');
 
-        // ✅ FILTER RANGE TANGGAL (OPSIONAL)
         if ($this->tanggalAwal && $this->tanggalAkhir) {
             $query->whereBetween('tanggal_kbm', [
                 $this->tanggalAwal,
@@ -41,10 +40,10 @@ class AllJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
                 'Tanggal'        => optional($jurnal->tanggal_kbm)->format('d-m-Y'),
                 'Jam Mulai'      => $jurnal->jam_mulai,
                 'Jam Selesai'    => $jurnal->jam_selesai,
-                'Kelas'          => $jurnal->kelas,
-                'ruang'          => $jurnal->ruang,
-                'Guru'           => optional($jurnal->user)->name,
-                'Mata Pelajaran' => $jurnal->mata_pelajaran,
+                'Kelas'          => $jurnal->kelas->nama ?? '-',
+                'Ruang'          => $jurnal->ruang ?? '-',
+                'Guru'           => $jurnal->guru->user->name ?? '-',
+                'Mata Pelajaran' => $jurnal->jadwal->mata_pelajaran ?? '-',
                 'Materi'         => $jurnal->materi,
                 'Kegiatan'       => $jurnal->kegiatan,
                 'Hadir'          => $jurnal->hadir,
@@ -63,7 +62,7 @@ class AllJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Jam Mulai',
             'Jam Selesai',
             'Kelas',
-            'ruang',
+            'Ruang',
             'Guru',
             'Mata Pelajaran',
             'Materi',

@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'is_approved',
     ];
 
     /**
@@ -51,6 +52,21 @@ class User extends Authenticatable
     public function jurnals()
     {
         return $this->hasMany(Jurnal::class);
+    }
+
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+
+    public function hasRole($roleName)
+    {
+        return $this->roles->contains('name', $roleName);
+    }
+
+    public function guru()
+    {
+        return $this->hasOne(Guru::class);
     }
 
 }

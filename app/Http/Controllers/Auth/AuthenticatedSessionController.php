@@ -22,26 +22,49 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
         $request->authenticate();
 
         $request->session()->regenerate();
 
-        // redirect ke halaman utama aplikasi
-        return redirect()->intended(route('jurnals.index'));
+        $user = Auth::user();
+
+        /**
+         * Cek approval admin
+         */
+        if (!$user->is_approved) {
+            Auth::logout();
+
+            return redirect()->route('login')
+                ->with('error', 'Akun kamu masih menunggu approval admin.');
+        }
+
+        /**
+         * ADMIN
+         */
+        if ($user->hasRole('admin')) {
+            session(['active_role' => 'admin']);
+
+            return redirect()->route('admin.dashboard');
+        }
+
+        /**
+         * DEFAULT GURU MAPEL
+         */
+        session(['active_role' => 'guru']);
+
+        return redirect()->route('guru.jurnals.index');
     }
 
-
     /**
-     * Destroy an authenticated session.
+     * Logout
      */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

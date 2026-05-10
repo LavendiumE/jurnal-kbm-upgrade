@@ -2,37 +2,37 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Jurnal extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
-        'user_id',
-        'tanggal_kbm',
-        'kelas',
-        'ruang',
+        'guru_id',
+        'kelas_id',
+        'jadwal_id',
+        'tipe',
+        'materi',
+        'kegiatan',
         'hadir',
         'izin',
         'sakit',
         'alfa',
-        'guru',
-        'mata_pelajaran',
-        'materi',
-        'kegiatan',
-        'jam_mulai',
-        'jam_selesai',
-        'dokumentasi',
+        'pkl',
+        'foto',
     ];
 
-    protected $casts = [
-        'tanggal_kbm' => 'date',
-    ];
-
-    public function user()
+    public function guru()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Guru::class);
+    }
+
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class);
+    }
+
+    public function jadwal()
+    {
+        return $this->belongsTo(Jadwal::class);
     }
 }
