@@ -2,7 +2,7 @@
     
     <div class="text-center">
         <div>
-            © Gofur 2025
+            © Gafur 2025
         </div>
 
         <div class="mt-1 text-gray-500">
