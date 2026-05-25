@@ -55,19 +55,37 @@
                             @csrf
                             <input type="hidden" name="role" value="piket">
 
-                            <button class="w-full text-left p-2 text-sm hover:bg-gray-100 rounded text-blue-600">
+                            <button
+                                class="w-full text-left p-2 text-sm hover:bg-gray-100 rounded text-blue-600">
+
                                 Switch ke Guru Piket
+
                             </button>
+
                         </form>
                         @endif
 
+                        {{-- UBAH PASSWORD --}}
+                        <a href="{{ route('password.edit') }}"
+                        class="block w-full text-left p-2 text-sm hover:bg-gray-100 rounded text-gray-700">
+
+                            Ubah Password
+
+                        </a>
+
                         {{-- LOGOUT --}}
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST"
+                            action="{{ route('logout') }}">
+
                             @csrf
 
-                            <button class="w-full text-left p-2 text-sm hover:bg-gray-100 rounded text-red-500">
+                            <button
+                                class="w-full text-left p-2 text-sm hover:bg-gray-100 rounded text-red-500">
+
                                 Logout
+
                             </button>
+
                         </form>
 
                     </div>

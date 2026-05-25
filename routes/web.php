@@ -97,6 +97,11 @@ Route::middleware(['auth'])->group(function () {
 
     })->name('dashboard');
 
+    Route::view(
+        '/change-password',
+        'auth.change-password'
+    )->name('password.edit');
+
 
     /*
     |--------------------------------------------------------------------------
