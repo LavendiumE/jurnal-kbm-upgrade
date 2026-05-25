@@ -14,24 +14,36 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
     protected $tanggalAwal;
     protected $tanggalAkhir;
 
-    public function __construct(int $guruId, $tanggalAwal = null, $tanggalAkhir = null)
-    {
-        $this->guruId       = $guruId;
-        $this->tanggalAwal  = $tanggalAwal;
+    public function __construct(
+        int $guruId,
+        $tanggalAwal = null,
+        $tanggalAkhir = null
+    ) {
+        $this->guruId = $guruId;
+        $this->tanggalAwal = $tanggalAwal;
         $this->tanggalAkhir = $tanggalAkhir;
     }
 
     public function collection(): Collection
     {
-        $query = Jurnal::with(['guru.user', 'kelas', 'jadwal'])
-            ->where('guru_id', $this->guruId)
-            ->orderBy('tanggal_kbm', 'asc');
+        $query = Jurnal::with([
+            'guru.user',
+            'kelas',
+            'jadwal.ruangan',
+            'jadwal.mapel'
+        ])
+        ->where('guru_id', $this->guruId)
+        ->orderBy('tanggal', 'asc');
 
         if ($this->tanggalAwal && $this->tanggalAkhir) {
-            $query->whereBetween('tanggal_kbm', [
-                $this->tanggalAwal,
-                $this->tanggalAkhir
-            ]);
+
+            $query->whereBetween(
+                'tanggal',
+                [
+                    $this->tanggalAwal,
+                    $this->tanggalAkhir
+                ]
+            );
         }
 
         return $query->get()->map(function ($jurnal) {
@@ -41,21 +53,51 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
                 : '';
 
             return [
-                'Tanggal'        => optional($jurnal->tanggal_kbm)->format('d-m-Y'),
-                'Jam Mulai'      => $jurnal->jadwal->jam_mulai ?? '-',
-                'Jam Selesai'    => $jurnal->jadwal->jam_selesai ?? '-',
-                'Kelas'          => $jurnal->kelas->nama ?? '-',
-                'Ruang'          => $jurnal->jadwal->ruangan->nama ?? '-',
-                'Guru'           => $jurnal->guru->nama ?? '-',
-                'Mata Pelajaran' => $jurnal->jadwal->mapel->nama ?? '-',
-                'Materi'         => $jurnal->materi,
-                'Kegiatan'       => $jurnal->kegiatan,
-                'Hadir'          => $jurnal->hadir,
-                'Izin'           => $jurnal->izin,
-                'Sakit'          => $jurnal->sakit,
-                'Alfa'           => $jurnal->alfa,
-                'PKL'            => $jurnal->pkl,
-                'Foto'           => $fotoUrl,
+
+                'Tanggal' =>
+                    optional($jurnal->tanggal)
+                    ?->format('d-m-Y'),
+
+                'Jam Mulai' =>
+                    $jurnal->jadwal->jam_mulai ?? '-',
+
+                'Jam Selesai' =>
+                    $jurnal->jadwal->jam_selesai ?? '-',
+
+                'Kelas' =>
+                    $jurnal->kelas->nama ?? '-',
+
+                'Ruang' =>
+                    $jurnal->jadwal->ruangan->nama ?? '-',
+
+                'Guru' =>
+                    $jurnal->guru->nama ?? '-',
+
+                'Mata Pelajaran' =>
+                    $jurnal->jadwal->mapel->nama ?? '-',
+
+                'Materi' =>
+                    $jurnal->materi ?? '-',
+
+                'Kegiatan' =>
+                    $jurnal->kegiatan ?? '-',
+
+                'Hadir' =>
+                    $jurnal->hadir ?? 0,
+
+                'Izin' =>
+                    $jurnal->izin ?? 0,
+
+                'Sakit' =>
+                    $jurnal->sakit ?? 0,
+
+                'Alfa' =>
+                    $jurnal->alfa ?? 0,
+
+                'PKL' =>
+                    $jurnal->pkl ?? 0,
+
+                'Foto' => $fotoUrl,
             ];
         });
     }

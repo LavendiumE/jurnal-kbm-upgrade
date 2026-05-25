@@ -112,6 +112,19 @@
                 </a>
             </li>
 
+            {{-- JURNAL KBM --}}
+            <li>
+                <a href="{{ route('admin.jurnals.index') }}"
+                class="flex items-center px-3 py-2 rounded-lg
+                {{ request()->routeIs('admin.jurnals.*')
+                ? 'bg-gray-100 text-blue-600'
+                : 'hover:bg-gray-100 text-gray-700' }}">
+
+                    <span>Jurnal KBM</span>
+
+                </a>
+            </li>
+
             {{-- MASTER DATA --}}
             <li x-data="{ open: {{ request()->routeIs('admin.jurusans.*') || request()->routeIs('admin.kelas.*') || request()->routeIs('admin.mapels.*') || request()->routeIs('admin.ruangans.*') || request()->routeIs('admin.gurus.*') ? 'true' : 'false' }} }">
 

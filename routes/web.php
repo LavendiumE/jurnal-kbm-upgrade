@@ -28,6 +28,7 @@ use App\Http\Controllers\JurusanController;
 use App\Http\Controllers\GuruController;
 
 use App\Http\Controllers\InformasiController;
+use App\Http\Controllers\Admin\AdminJurnalController;
 
 
 /*
@@ -294,6 +295,17 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/informasi', [InformasiController::class, 'store'])->name('admin.informasi.store');
         Route::delete('/informasi/{id}', [InformasiController::class, 'destroy'])->name('admin.informasi.destroy');
+
+         // JURNAL KBM ADMIN
+        Route::get(
+            '/jurnals',
+            [AdminJurnalController::class, 'index']
+        )->name('admin.jurnals.index');
+
+        Route::get(
+            '/jurnals/export',
+            [AdminJurnalController::class, 'export']
+        )->name('admin.jurnals.export');
     });
 
 
