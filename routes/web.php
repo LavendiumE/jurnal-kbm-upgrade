@@ -29,6 +29,7 @@ use App\Http\Controllers\GuruController;
 
 use App\Http\Controllers\InformasiController;
 use App\Http\Controllers\Admin\AdminJurnalController;
+use App\Http\Controllers\SettingController;
 
 
 /*
@@ -306,6 +307,12 @@ Route::middleware(['auth'])->group(function () {
             '/jurnals/export',
             [AdminJurnalController::class, 'export']
         )->name('admin.jurnals.export');
+
+        Route::get('/settings', [SettingController::class, 'index'])
+            ->name('admin.settings.index');
+
+        Route::post('/settings', [SettingController::class, 'update'])
+            ->name('admin.settings.update');
     });
 
 

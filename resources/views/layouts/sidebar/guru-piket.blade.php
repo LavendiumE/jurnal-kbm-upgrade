@@ -15,10 +15,30 @@
                     </svg>
                 </button>
 
-                <a href="{{ route('piket.dashboard') }}" class="flex items-center ms-2">
-                    <span class="text-lg font-semibold text-gray-800">
-                        JURNAL-KBM
-                    </span>
+                @php
+                    $setting = \App\Models\Setting::first();
+                @endphp
+
+                <a href="{{ route('piket.dashboard') }}"
+                class="flex items-center gap-3">
+
+                    @if($setting && $setting->logo)
+                        <img
+                            src="{{ asset('storage/'.$setting->logo) }}"
+                            alt="Logo Sekolah"
+                            class="w-10 h-10 object-contain">
+                    @endif
+
+                    <div>
+                        <h1 class="font-bold text-gray-800 leading-none">
+                            {{ $setting->nama_sekolah ?? 'JURNAL-KBM' }}
+                        </h1>
+
+                        <p class="text-xs text-gray-500">
+                            Guru Piket
+                        </p>
+                    </div>
+
                 </a>
             </div>
 
@@ -86,7 +106,7 @@
 
         {{-- TITLE --}}
         <div class="mb-6 px-2">
-            <p class="text-xs text-gray-400 uppercase">
+            <p class="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Guru Piket
             </p>
         </div>
@@ -97,7 +117,21 @@
             <li>
                 <a href="{{ route('piket.dashboard') }}"
                    class="flex items-center px-3 py-2 rounded-lg
-                   {{ request()->routeIs('piket.dashboard') ? 'bg-gray-100 text-blue-600' : 'hover:bg-gray-100 text-gray-700' }}">
+                   {{ request()->routeIs('piket.dashboard')
+                        ? 'bg-gray-100 text-blue-600'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-5 h-5 mr-3">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75V19.5a.75.75 0 00.75.75H9.75v-6h4.5v6h4.5a.75.75 0 00.75-.75V9.75" />
+                    </svg>
+
                     <span>Dashboard</span>
                 </a>
             </li>
@@ -106,50 +140,93 @@
             <li>
                 <a href="{{ route('piket.jurnal.index') }}"
                    class="flex items-center px-3 py-2 rounded-lg
-                   {{ request()->routeIs('piket.jurnal.*') ? 'bg-gray-100 text-blue-600' : 'hover:bg-gray-100 text-gray-700' }}">
+                   {{ request()->routeIs('piket.jurnal.*')
+                        ? 'bg-gray-100 text-blue-600'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-5 h-5 mr-3">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 6.042A8.967 8.967 0 0 0 3.75 4.5v13.5A8.967 8.967 0 0 1 12 19.5a8.967 8.967 0 0 1 8.25-1.5V4.5A8.967 8.967 0 0 0 12 6.042Z" />
+                    </svg>
+
                     <span>Jurnal</span>
                 </a>
             </li>
 
-            {{-- PERIZINAN --}}
+            {{-- PERIZINAN TITLE --}}
+            <li class="pt-4">
+                <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
+                    Perizinan
+                </p>
+            </li>
+
+            {{-- IZIN KELUAR --}}
             <li>
+                <a href="{{ route('piket.perizinan.keluar.index') }}"
+                   class="flex items-center px-3 py-2 rounded-lg
+                   {{ request()->routeIs('piket.perizinan.keluar.*')
+                        ? 'bg-gray-100 text-blue-600'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
 
-                <button type="button"
-                        class="flex items-center w-full justify-between px-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700"
-                        data-collapse-toggle="menu-perizinan">
-
-                    <span>Perizinan</span>
-
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="m19 9-7 7-7-7"/>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mr-3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
                     </svg>
-                </button>
 
-                <ul id="menu-perizinan" class="hidden mt-2 space-y-1">
 
-                    <li>
-                        <a href="{{ route('piket.perizinan.keluar.index') }}"
-                           class="block pl-6 pr-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                            Siswa Izin Keluar
-                        </a>
-                    </li>
+                    <span>Siswa Izin Keluar</span>
+                </a>
+            </li>
 
-                    <li>
-                        <a href="{{ route('piket.perizinan.pulang.index') }}"
-                           class="block pl-6 pr-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                            Siswa Izin Pulang
-                        </a>
-                    </li>
+            {{-- IZIN PULANG --}}
+            <li>
+                <a href="{{ route('piket.perizinan.pulang.index') }}"
+                   class="flex items-center px-3 py-2 rounded-lg
+                   {{ request()->routeIs('piket.perizinan.pulang.*')
+                        ? 'bg-gray-100 text-blue-600'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
 
-                    <li>
-                        <a href="{{ route('piket.perizinan.terlambat.index') }}"
-                           class="block pl-6 pr-3 py-2 rounded-lg hover:bg-gray-100 text-gray-700">
-                            Siswa Terlambat
-                        </a>
-                    </li>
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-5 h-5 mr-3">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75V19.5a.75.75 0 00.75.75H9.75v-6h4.5v6h4.5a.75.75 0 00.75-.75V9.75" />
+                    </svg>
 
-                </ul>
+                    <span>Siswa Izin Pulang</span>
+                </a>
+            </li>
 
+            {{-- TERLAMBAT --}}
+            <li>
+                <a href="{{ route('piket.perizinan.terlambat.index') }}"
+                   class="flex items-center px-3 py-2 rounded-lg
+                   {{ request()->routeIs('piket.perizinan.terlambat.*')
+                        ? 'bg-gray-100 text-blue-600'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-5 h-5 mr-3">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z" />
+                    </svg>
+
+                    <span>Siswa Terlambat</span>
+                </a>
             </li>
 
         </ul>

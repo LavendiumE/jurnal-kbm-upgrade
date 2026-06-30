@@ -15,10 +15,30 @@
                     </svg>
                 </button>
 
-                <a href="{{ route('guru.dashboard') }}" class="flex items-center ms-2">
-                    <span class="text-lg font-semibold text-gray-800">
-                        JURNAL-KBM
-                    </span>
+                @php
+                    $setting = \App\Models\Setting::first();
+                @endphp
+
+                <a href="{{ route('guru.dashboard') }}"
+                class="flex items-center gap-3">
+
+                    @if($setting && $setting->logo)
+                        <img
+                            src="{{ asset('storage/'.$setting->logo) }}"
+                            alt="Logo Sekolah"
+                            class="w-10 h-10 object-contain">
+                    @endif
+
+                    <div>
+                        <h1 class="font-bold text-gray-800 leading-none">
+                            {{ $setting->nama_sekolah ?? 'JURNAL-KBM' }}
+                        </h1>
+
+                        <p class="text-xs text-gray-500">
+                            Guru Mata Pelajaran
+                        </p>
+                    </div>
+
                 </a>
             </div>
 
@@ -119,6 +139,16 @@
                    class="flex items-center px-3 py-2 rounded-lg
                    {{ request()->routeIs('guru.jurnals.*') ? 'bg-gray-100 text-blue-600' : 'hover:bg-gray-100 text-gray-700' }}">
 
+                   <svg xmlns="http://www.w3.org/2000/svg"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke-width="1.5"
+                         stroke="currentColor"
+                         class="w-5 h-5 mr-3">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 6.042A8.967 8.967 0 0 0 3.75 4.5v13.5A8.967 8.967 0 0 1 12 19.5a8.967 8.967 0 0 1 8.25-1.5V4.5A8.967 8.967 0 0 0 12 6.042Z" />
+                    </svg>
                     <span>Jurnal</span>
                 </a>
             </li>
