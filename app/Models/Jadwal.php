@@ -15,6 +15,9 @@ class Jadwal extends Model
         'jam_ke',
         'jam_mulai',
         'jam_selesai',
+
+        'use_default_batas_jurnal',
+        'batas_jurnal_menit',
     ];
 
     public function guru()

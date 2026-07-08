@@ -18,6 +18,25 @@
             <span>Informasi</span>
         </button>
 
+        @if(session('success'))
+
+        <div class="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-green-700">
+
+            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24" stroke-width="2">
+
+                <path stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"/>
+
+            </svg>
+
+            <span>{{ session('success') }}</span>
+
+        </div>
+
+        @endif
+
         {{-- CARDS --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 

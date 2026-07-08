@@ -34,6 +34,7 @@ class AuthenticatedSessionController extends Controller
          * Cek approval admin
          */
         if (!$user->is_approved) {
+
             Auth::logout();
 
             return redirect()->route('login')
@@ -41,9 +42,22 @@ class AuthenticatedSessionController extends Controller
         }
 
         /**
+         * CEK STATUS GURU
+         */
+        if (!$user->is_active) {
+
+            Auth::logout();
+
+            return redirect()->route('login')
+                ->with('error', 'Akun telah dinonaktifkan karena guru sudah dimutasi. Silakan hubungi Administrator.');
+
+        }
+
+        /**
          * ADMIN
          */
         if ($user->hasRole('admin')) {
+
             session(['active_role' => 'admin']);
 
             return redirect()->route('admin.dashboard');

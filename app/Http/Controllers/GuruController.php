@@ -58,4 +58,20 @@ class GuruController extends Controller
 
         return back()->with('success', 'Akses guru piket berhasil diupdate');
     }
+
+    public function toggleActive($id)
+    {
+        $user = User::findOrFail($id);
+
+        $user->update([
+            'is_active' => !$user->is_active
+        ]);
+
+        return back()->with(
+            'success',
+            $user->is_active
+                ? 'Guru berhasil diaktifkan kembali.'
+                : 'Guru berhasil dimutasi.'
+        );
+    }
 }

@@ -44,10 +44,30 @@
 </div>
 
 
+
+
 <div id="modalKelas" class="hidden fixed inset-0 bg-black/30 flex items-center justify-center">
     <div class="bg-white p-6 rounded-lg w-full max-w-md">
 
         <h3 class="text-lg font-semibold mb-4">Tambah Kelas</h3>
+
+        @if ($errors->any())
+
+        <div class="mb-4 rounded-lg bg-red-50 border border-red-200 p-3">
+
+            <ul class="text-sm text-red-600 space-y-1">
+
+                @foreach($errors->all() as $error)
+
+                    <li>• {{ $error }}</li>
+
+                @endforeach
+
+            </ul>
+
+        </div>
+
+        @endif
 
         <form action="{{ route('admin.kelas.store') }}" method="POST">
             @csrf
@@ -57,13 +77,25 @@
                    class="w-full border rounded px-3 py-2 mb-4"
                    placeholder="Nama kelas">
 
-            <select name="jurusan_id"
-                    class="w-full border rounded px-3 py-2 mb-4">
+            <select
+                name="jurusan_id"
+                class="w-full border rounded px-3 py-2 mb-4"
+                required>
+
+                <option value="">
+                    -- Pilih Jurusan --
+                </option>
+
                 @foreach($jurusans as $jurusan)
-                    <option value="{{ $jurusan->id }}">
+                    <option
+                        value="{{ $jurusan->id }}"
+                        {{ old('jurusan_id') == $jurusan->id ? 'selected' : '' }}>
+
                         {{ $jurusan->nama }}
+
                     </option>
                 @endforeach
+
             </select>
 
             <div class="flex justify-end gap-2">

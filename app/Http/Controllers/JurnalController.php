@@ -12,6 +12,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\AllJurnalsExport;
 use App\Exports\MyJurnalsExport;
 use App\Models\Informasi;
+use App\Models\Setting;
+use Carbon\Carbon;
 
 class JurnalController extends Controller
 {
@@ -44,11 +46,39 @@ class JurnalController extends Controller
             return back()->with('error', 'Akun guru belum terhubung ke data guru');
         }
 
+        $setting = Setting::first();
+
+        $defaultMenit = $setting->batas_jurnal_menit ?? 30;
+
+        // Konversi hari Carbon -> format database
+        $hariMap = [
+            'Monday'    => 'senin',
+            'Tuesday'   => 'selasa',
+            'Wednesday' => 'rabu',
+            'Thursday'  => 'kamis',
+            'Friday'    => 'jumat',
+            'Saturday'  => 'sabtu',
+        ];
+
+        $hariIni = $hariMap[now()->englishDayOfWeek] ?? null;
+
         $jadwals = Jadwal::with(['kelas', 'mapel', 'ruangan'])
             ->where('guru_id', $guru->id)
-            ->orderBy('hari')
+            ->where('hari', $hariIni)
             ->orderBy('jam_ke')
-            ->get();
+            ->get()
+            ->filter(function ($jadwal) use ($defaultMenit) {
+
+                $menit = $jadwal->use_default_batas_jurnal
+                    ? $defaultMenit
+                    : $jadwal->batas_jurnal_menit;
+
+                $deadline = Carbon::today()
+                    ->setTimeFromTimeString($jadwal->jam_selesai)
+                    ->addMinutes($menit);
+
+                return now()->lte($deadline);
+            });
 
         return view('guru.jurnals.create', compact('jadwals'));
     }
@@ -71,6 +101,54 @@ class JurnalController extends Controller
         $guru = Guru::where('user_id', Auth::id())->first();
         $jadwal = Jadwal::findOrFail($request->jadwal_id);
 
+        if ($jadwal->guru_id != $guru->id) {
+            abort(403, 'Jadwal tidak valid.');
+        }
+
+        // =========================
+        // VALIDASI HARI
+        // =========================
+        $hariMap = [
+            'Monday'    => 'senin',
+            'Tuesday'   => 'selasa',
+            'Wednesday' => 'rabu',
+            'Thursday'  => 'kamis',
+            'Friday'    => 'jumat',
+            'Saturday'  => 'sabtu',
+        ];
+
+        $hariIni = $hariMap[now()->englishDayOfWeek] ?? null;
+
+        if ($jadwal->hari !== $hariIni) {
+            return back()
+                ->withInput()
+                ->with('error', 'Jurnal hanya dapat diisi sesuai jadwal pada hari ini.');
+        }
+
+        // =========================
+        // VALIDASI BATAS WAKTU
+        // =========================
+        $setting = Setting::first();
+
+        $defaultMenit = $setting->batas_jurnal_menit ?? 30;
+
+        $menit = $jadwal->use_default_batas_jurnal
+            ? $defaultMenit
+            : $jadwal->batas_jurnal_menit;
+
+        $deadline = now()->copy()
+            ->setTimeFromTimeString($jadwal->jam_selesai)
+            ->addMinutes($menit);
+
+        if (now()->gt($deadline)) {
+            return back()
+                ->withInput()
+                ->with('error', 'Batas waktu upload jurnal untuk jadwal ini sudah berakhir.');
+        }
+
+        // =========================
+        // SIMPAN JURNAL
+        // =========================
         $validated['guru_id'] = $guru->id;
         $validated['kelas_id'] = $jadwal->kelas_id;
         $validated['jadwal_id'] = $jadwal->id;

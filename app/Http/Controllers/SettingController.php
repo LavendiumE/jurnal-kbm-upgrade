@@ -12,7 +12,7 @@ class SettingController extends Controller
     {
         $setting = Setting::first();
 
-        return view('admin.settings', compact('setting'));
+        return view('admin.settings.sekolah', compact('setting'));
     }
 
     public function update(Request $request)
@@ -31,7 +31,8 @@ class SettingController extends Controller
 
         $setting->nama_sekolah = $request->nama_sekolah;
         $setting->teks_login   = $request->teks_login;
-
+        
+        
         // upload logo baru
         if ($request->hasFile('logo')) {
 

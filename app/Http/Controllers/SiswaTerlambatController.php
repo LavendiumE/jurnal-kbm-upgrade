@@ -24,7 +24,9 @@ class SiswaTerlambatController extends Controller
     public function create()
     {
         $kelas = Kelas::all();
-        $gurus = Guru::all();
+        $gurus = Guru::whereHas('user', function ($query) {
+                    $query->where('is_active', true);
+                })->orderBy('nama')->get();
 
         return view('piket.perizinan.siswa_terlambat.create', compact('kelas', 'gurus'));
     }
@@ -60,7 +62,9 @@ class SiswaTerlambatController extends Controller
     {
         $data = SiswaTerlambat::findOrFail($id);
         $kelas = Kelas::all();
-        $gurus = Guru::all();
+        $gurus = Guru::whereHas('user', function ($query) {
+                    $query->where('is_active', true);
+                })->orderBy('nama')->get();
 
         return view('piket.perizinan.siswa_terlambat.edit', compact('data', 'kelas', 'gurus'));
     }

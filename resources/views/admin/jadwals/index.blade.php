@@ -41,6 +41,7 @@
                         <th class="px-4 py-3 border">Mata Pelajaran</th>
                         <th class="px-4 py-3 border">Guru</th>
                         <th class="px-4 py-3 border">Ruangan</th>
+                        <th class="px-4 py-3 border">Deadline</th>
                         <th class="px-4 py-3 border text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -73,6 +74,40 @@
 
                         <td class="border px-4 py-3">
                             {{ $jadwal->ruangan->nama ?? '-' }}
+                        </td>
+
+                        <td class="border px-4 py-3 text-center">
+
+                            @if($jadwal->use_default_batas_jurnal)
+
+                                <div class="inline-flex flex-col items-center">
+
+                                    <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                                        Default
+                                    </span>
+
+                                    <span class="text-xs text-gray-500 mt-1">
+                                        {{ $setting->batas_jurnal_menit ?? 30 }} menit
+                                    </span>
+
+                                </div>
+
+                            @else
+
+                                <div class="inline-flex flex-col items-center">
+
+                                    <span class="px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold">
+                                        Custom
+                                    </span>
+
+                                    <span class="text-xs text-gray-500 mt-1">
+                                        {{ $jadwal->batas_jurnal_menit }} menit
+                                    </span>
+
+                                </div>
+
+                            @endif
+
                         </td>
 
                         <td class="border px-4 py-3 text-center">

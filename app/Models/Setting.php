@@ -10,5 +10,6 @@ class Setting extends Model
         'nama_sekolah',
         'teks_login',
         'logo',
+        'batas_jurnal_menit',
     ];
 }

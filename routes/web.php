@@ -30,6 +30,7 @@ use App\Http\Controllers\GuruController;
 use App\Http\Controllers\InformasiController;
 use App\Http\Controllers\Admin\AdminJurnalController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\Admin\JurnalSettingController;
 
 
 /*
@@ -313,6 +314,11 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/settings', [SettingController::class, 'update'])
             ->name('admin.settings.update');
+        Route::get('/jurnal-settings', [JurnalSettingController::class, 'index'])
+            ->name('admin.jurnal-settings.index');
+
+        Route::post('/jurnal-settings', [JurnalSettingController::class, 'update'])
+            ->name('admin.jurnal-settings.update');
     });
 
 
@@ -349,6 +355,11 @@ Route::middleware(['auth'])->group(function () {
             
 
     })->name('switch.role');
+
+    Route::post(
+    '/admin/gurus/{id}/toggle-active',
+    [GuruController::class,'toggleActive']
+    )->name('admin.gurus.toggle-active');
 
 });
 

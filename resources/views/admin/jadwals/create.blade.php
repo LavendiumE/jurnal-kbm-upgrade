@@ -75,6 +75,9 @@
                             <th class="px-4 py-3 border text-left">Mata Pelajaran</th>
                             <th class="px-4 py-3 border text-left">Guru</th>
                             <th class="px-4 py-3 border text-left">Ruangan</th>
+                            <th class="px-4 py-3 border text-center w-64">
+                                Batas Upload Jurnal
+                            </th>
                         </tr>
                     </thead>
 
@@ -127,6 +130,70 @@
                                 </select>
                             </td>
 
+                            <td class="border px-4 py-3">
+
+                                {{-- PENGATURAN BATAS JURNAL --}}
+                                <div class="space-y-3">
+
+                                    <div>
+
+                                        <label class="inline-flex items-center gap-2 cursor-pointer">
+
+                                            <input
+                                                type="checkbox"
+                                                checked
+                                                onchange="toggleBatas(this)"
+                                                class="toggle-default h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+
+                                            <span class="text-sm font-medium text-gray-700">
+                                                Gunakan Setting Global
+                                            </span>
+
+                                        </label>
+
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Mengikuti pengaturan jurnal sekolah
+                                        </p>
+
+                                    </div>
+
+                                    {{-- Hidden Value --}}
+                                    <input
+                                        type="hidden"
+                                        class="default-value"
+                                        name="use_default_batas_jurnal[]"
+                                        value="1">
+
+                                    {{-- INFO DEFAULT --}}
+                                    <div class="default-info">
+
+                                        <p class="text-sm text-blue-600 font-medium">
+                                            Default :
+                                            {{ $setting->batas_jurnal_menit ?? 30 }} menit
+                                        </p>
+
+                                    </div>
+
+                                    {{-- CUSTOM --}}
+                                    <div class="custom-batas hidden">
+
+                                        <label class="block text-xs text-gray-600 mb-1">
+                                            Toleransi (menit)
+                                        </label>
+
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            name="batas_jurnal_menit[]"
+                                            class="custom-input w-full border rounded px-3 py-2"
+                                            placeholder="45">
+
+                                    </div>
+
+                                </div>
+
+                            </td>
+
                         </tr>
                         @endfor
 
@@ -157,5 +224,44 @@
 
 </div>
 
+<script>
+
+    function toggleBatas(el){
+
+        const td = el.closest('td');
+
+        const hidden = td.querySelector('.default-value');
+
+        const defaultInfo = td.querySelector('.default-info');
+
+        const custom = td.querySelector('.custom-batas');
+
+        const input = td.querySelector('.custom-input');
+
+        if(el.checked){
+
+            hidden.value = 1;
+
+            defaultInfo.classList.remove('hidden');
+
+            custom.classList.add('hidden');
+
+            input.value = '';
+
+        }else{
+
+            hidden.value = 0;
+
+            defaultInfo.classList.add('hidden');
+
+            custom.classList.remove('hidden');
+
+            input.focus();
+
+        }
+
+    }
+
+</script>
 @endsection
 ```

@@ -10,16 +10,17 @@ class InformasiController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'isi' => 'required'
+            'isi' => 'required|string|max:1000',
         ]);
-
-        Informasi::truncate();
 
         Informasi::create([
-            'isi' => $request->isi
+            'isi' => $request->isi,
         ]);
 
-        return back()->with('success', 'Informasi berhasil ditambahkan');
+        return back()->with(
+            'success',
+            'Informasi berhasil ditambahkan.'
+        );
     }
 
     public function destroy($id)
