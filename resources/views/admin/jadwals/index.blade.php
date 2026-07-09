@@ -87,7 +87,7 @@
                                     </span>
 
                                     <span class="text-xs text-gray-500 mt-1">
-                                        {{ $setting->batas_jurnal_menit ?? 30 }} menit
+                                        {{ $setting->toleransi_jurnal ?? 30 }} menit
                                     </span>
 
                                 </div>

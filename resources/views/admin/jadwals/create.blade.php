@@ -169,7 +169,7 @@
 
                                         <p class="text-sm text-blue-600 font-medium">
                                             Default :
-                                            {{ $setting->batas_jurnal_menit ?? 30 }} menit
+                                            {{ $setting->toleransi_jurnal ?? 30 }} menit
                                         </p>
 
                                     </div>

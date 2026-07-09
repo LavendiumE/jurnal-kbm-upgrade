@@ -20,10 +20,10 @@ class JadwalController extends Controller
         $jadwals = Jadwal::with(['guru', 'kelas', 'mapel', 'ruangan'])
             ->latest()
             ->paginate(10);
-            
+
         $setting = \App\Models\Setting::first();
 
-        return view('admin.jadwals.index', compact('jadwals'));
+        return view('admin.jadwals.index', compact('jadwals', 'setting'));
     }
 
     public function create()
@@ -32,9 +32,11 @@ class JadwalController extends Controller
             'gurus' => Guru::whereHas('user', function ($query) {
                 $query->where('is_active', true);
             })->orderBy('nama')->get(),
+
             'kelas' => Kelas::all(),
             'mapels' => Mapel::all(),
             'ruangans' => Ruangan::all(),
+            'setting' => \App\Models\Setting::first(),
         ]);
     }
 
@@ -84,7 +86,7 @@ class JadwalController extends Controller
                 // ===== BATAS JURNAL =====
                 'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
 
-                'batas_jurnal_menit' =>
+                'toleransi_jurnal' =>
                     $request->use_default_batas_jurnal[$i]
                         ? null
                         : ($request->batas_jurnal_menit[$i] ?: null),

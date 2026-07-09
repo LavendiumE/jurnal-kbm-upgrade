@@ -66,10 +66,10 @@
 
                             <input
                                 type="number"
-                                name="batas_jurnal_menit"
+                                name="toleransi_jurnal"
                                 min="0"
                                 max="240"
-                                value="{{ old('batas_jurnal_menit', $setting->batas_jurnal_menit ?? 30) }}"
+                                value="{{ old('toleransi_jurnal', $setting->toleransi_jurnal ?? 30) }}"
                                 class="w-32 border rounded-lg px-3 py-2">
 
                             <span class="text-gray-600">

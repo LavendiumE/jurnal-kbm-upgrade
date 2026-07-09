@@ -18,7 +18,7 @@ class JurnalSettingController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'batas_jurnal_menit' => 'required|integer|min:0|max:240',
+            'toleransi_jurnal' => 'required|integer|min:0|max:240',
         ]);
 
         $setting = Setting::first();
@@ -27,7 +27,7 @@ class JurnalSettingController extends Controller
             $setting = new Setting();
         }
 
-        $setting->batas_jurnal_menit = $request->toleransi_jurnal;
+        $setting->toleransi_jurnal = $request->toleransi_jurnal;
 
         $setting->save();
 
