@@ -69,9 +69,91 @@
 
                         <tr>
 
-                            <td class="border px-4 py-3 text-center">
-                                Jam {{ $i }}
-                                <input type="hidden" name="jam_ke[]" value="{{ $i }}">
+                           <td class="border px-4 py-3">
+                                <div class="space-y-3">
+
+                                    <div class="text-center font-medium">
+                                        Jam {{ $i }}
+                                    </div>
+
+                                    <input
+                                        type="hidden"
+                                        name="jam_ke[]"
+                                        value="{{ $i }}">
+
+                                    {{-- Preview --}}
+                                    <div class="preview-jam text-center">
+
+                                        <div class="text-blue-600 font-semibold">
+
+                                            
+                                            <span class="preview-mulai">
+                                                {{ optional($jadwal)->jam_mulai ?? $defaultJam[$i][0] }}
+                                            </span>
+
+                                            -
+
+                                            <span class="preview-selesai">
+                                                {{ optional($jadwal)->jam_selesai ?? $defaultJam[$i][1] }}
+                                            </span>
+
+                                        </div>
+
+                                    </div>
+
+                                    {{-- Tombol --}}
+                                    <div class="text-center">
+
+                                        <button
+                                            type="button"
+                                            onclick="toggleJam(this)"
+                                            class="btn-edit-jam text-sm text-blue-600 hover:text-blue-800 hover:underline">
+
+                                            Edit Jam
+
+                                        </button>
+
+                                    </div>
+
+                                    {{-- Form Edit --}}
+                                    <div class="edit-jam hidden space-y-3">
+
+                                        <div>
+
+                                            <label class="block text-xs text-gray-500 mb-1">
+
+                                                Jam Mulai
+
+                                            </label>
+
+                                            <input
+                                                type="time"
+                                                name="jam_mulai[]"
+                                                value="{{ optional($jadwal)->jam_mulai ?? $defaultJam[$i][0] }}"
+                                                class="jam-mulai w-full border rounded px-2 py-1">
+
+                                        </div>
+
+                                        <div>
+
+                                            <label class="block text-xs text-gray-500 mb-1">
+
+                                                Jam Selesai
+
+                                            </label>
+
+                                            <input
+                                                type="time"
+                                                name="jam_selesai[]"
+                                                value="{{ optional($jadwal)->jam_selesai ?? $defaultJam[$i][1] }}"
+                                                class="jam-selesai w-full border rounded px-2 py-1">
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
                             </td>
 
                             {{-- MAPEL --}}
@@ -249,6 +331,46 @@
         }
 
     }
+
+    function toggleJam(button){
+
+        const td = button.closest('td');
+
+        const edit = td.querySelector('.edit-jam');
+
+        edit.classList.toggle('hidden');
+
+        if(edit.classList.contains('hidden')){
+
+            button.innerHTML = 'Edit Jam';
+            button.classList.remove('text-red-600');
+            button.classList.add('text-blue-600');
+
+        }else{
+
+            button.innerHTML = 'Tutup';
+            button.classList.remove('text-blue-600');
+            button.classList.add('text-red-600');
+
+        }
+
+    }
+
+    document.querySelectorAll('.jam-mulai, .jam-selesai').forEach(function(input){
+
+        input.addEventListener('input', function(){
+
+            const td = this.closest('td');
+
+            const mulai = td.querySelector('.jam-mulai').value;
+            const selesai = td.querySelector('.jam-selesai').value;
+
+            td.querySelector('.preview-mulai').textContent = mulai;
+            td.querySelector('.preview-selesai').textContent = selesai;
+
+        });
+
+    });
 
 </script>
 @endsection
