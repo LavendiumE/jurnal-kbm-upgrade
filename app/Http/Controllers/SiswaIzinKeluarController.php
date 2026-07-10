@@ -33,28 +33,27 @@ class SiswaIzinKeluarController extends Controller
             'nama' => 'required|string',
             'nis' => 'required|string',
             'kelas_id' => 'required',
-            'alasan' => 'nullable|string',
+            'keperluan' => 'nullable|string',
             'jam_izin' => 'required',
             'jam_kembali' => 'nullable',
-            'paraf_guru' => 'nullable|file',
+            'paraf_guru' => 'nullable|file|max:2048',
         ]);
 
         if ($request->hasFile('paraf_guru')) {
-            $validated['paraf_guru'] = $request->file('paraf_guru')->store('paraf-guru', 'public');
+            $validated['paraf_guru'] = $request
+                ->file('paraf_guru')
+                ->store('paraf-guru', 'public');
         }
 
-        $kelas = Kelas::find($request->kelas_id);
+        $kelas = Kelas::findOrFail($request->kelas_id);
+
         $validated['kelas'] = $kelas->nama;
-
-        $validated['keperluan'] = $request->alasan;
-
         $validated['user_id'] = auth()->id();
-       
-        $validated['tanggal'] = now()->toDateString();
 
         SiswaIzinKeluar::create($validated);
 
-        return redirect()->route('piket.perizinan.keluar.index')
+        return redirect()
+            ->route('piket.perizinan.keluar.index')
             ->with('success', 'Data berhasil ditambahkan');
     }
 
@@ -74,18 +73,16 @@ class SiswaIzinKeluarController extends Controller
             'nama' => 'required|string',
             'nis' => 'required|string',
             'kelas_id' => 'required',
-            'alasan' => 'nullable|string',
+            'keperluan' => 'nullable|string',
             'jam_izin' => 'required',
             'jam_kembali' => 'nullable',
             'paraf_guru' => 'nullable|file|max:2048',
         ]);
 
-        // Upload file baru
         if ($request->hasFile('paraf_guru')) {
 
-            // Hapus file lama kalau ada
             if ($data->paraf_guru) {
-                \Storage::disk('public')->delete($data->paraf_guru);
+                Storage::disk('public')->delete($data->paraf_guru);
             }
 
             $validated['paraf_guru'] = $request
@@ -93,10 +90,9 @@ class SiswaIzinKeluarController extends Controller
                 ->store('paraf-izin-keluar', 'public');
         }
 
-        $kelas = Kelas::find($request->kelas_id);
+        $kelas = Kelas::findOrFail($request->kelas_id);
 
         $validated['kelas'] = $kelas->nama;
-        $validated['keperluan'] = $request->alasan;
 
         $data->update($validated);
 
@@ -109,14 +105,22 @@ class SiswaIzinKeluarController extends Controller
     {
         $data = SiswaIzinKeluar::findOrFail($id);
 
+        if ($data->paraf_guru) {
+            Storage::disk('public')->delete($data->paraf_guru);
+        }
+
         $data->delete();
 
-        return redirect()->route('piket.perizinan.keluar.index')
+        return redirect()
+            ->route('piket.perizinan.keluar.index')
             ->with('success', 'Data berhasil dihapus');
     }
 
     public function export()
     {
-        return Excel::download(new SiswaIzinKeluarExport, 'izin-keluar.xlsx');
+        return Excel::download(
+            new SiswaIzinKeluarExport,
+            'izin-keluar.xlsx'
+        );
     }
 }

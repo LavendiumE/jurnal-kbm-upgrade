@@ -20,8 +20,13 @@ class JurnalController extends Controller
     public function index()
     {
         if (auth()->user()->hasRole('admin')) {
-            $jurnals = Jurnal::latest()->paginate(10);
+
+            $jurnals = Jurnal::where('tipe', 'guru')
+                ->latest()
+                ->paginate(10);
+
         } else {
+
             $guru = Guru::where('user_id', auth()->id())->first();
 
             if (!$guru) {
@@ -29,10 +34,10 @@ class JurnalController extends Controller
             }
 
             $jurnals = Jurnal::where('guru_id', $guru->id)
+                ->where('tipe', 'guru')
                 ->latest()
                 ->paginate(10);
         }
-
         $informasi = Informasi::latest()->first();
 
         return view('guru.jurnals.index', compact('jurnals', 'informasi'));
@@ -167,11 +172,15 @@ class JurnalController extends Controller
 
     public function edit(Jurnal $jurnal)
     {
+        abort_if($jurnal->tipe !== 'guru', 404);
+
         return view('guru.jurnals.edit', compact('jurnal'));
     }
 
     public function update(Request $request, Jurnal $jurnal)
     {
+        abort_if($jurnal->tipe !== 'guru', 404);
+
         $validated = $request->validate([
             'materi' => 'required|string',
             'kegiatan' => 'nullable|string',
@@ -209,6 +218,7 @@ class JurnalController extends Controller
 
     public function destroy(Jurnal $jurnal)
     {
+        abort_if($jurnal->tipe !== 'guru', 404);
         // Hapus file foto kalau ada
         if ($jurnal->foto) {
             Storage::disk('public')->delete($jurnal->foto);

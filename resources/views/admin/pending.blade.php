@@ -22,6 +22,12 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">
+                {{ session('error') }}
+            </div>
+        @endif
+
         {{-- TABLE --}}
         <div class="bg-white rounded-lg shadow-sm border overflow-hidden">
 
@@ -55,12 +61,33 @@
 
                         <td class="px-4 py-3 text-center">
 
-                            <a href="{{ route('admin.approve', $user->id) }}"
-                               class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
+                            <div class="flex justify-center gap-2">
 
-                                Approve
+                                <a href="{{ route('admin.approve', $user->id) }}"
+                                class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-sm">
 
-                            </a>
+                                    Approve
+
+                                </a>
+
+                                <form action="{{ route('admin.delete-user', $user->id) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button
+                                        type="submit"
+                                        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-sm">
+
+                                        Hapus
+
+                                    </button>
+
+                                </form>
+
+                            </div>
 
                         </td>
 

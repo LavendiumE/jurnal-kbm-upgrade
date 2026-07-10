@@ -261,6 +261,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/approve/{id}', [AdminController::class, 'approve'])
             ->name('admin.approve');
 
+        Route::delete('/admin/delete-user/{id}', [AdminController::class, 'destroy'])
+            ->name('admin.delete-user');
+
         Route::get('/jadwals/export', [JadwalController::class, 'export'])
             ->name('admin.jadwals.export');
 

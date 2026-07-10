@@ -26,11 +26,11 @@ class SiswaIzinKeluarExport implements
             'Nama',
             'NIS',
             'Kelas',
-            'Alasan',
-            'Jam Izin',
+            'Keperluan',
+            'Jam Keluar',
             'Jam Kembali',
             'Paraf Guru',
-            'Tanggal Dibuat'
+            'Tanggal'
         ];
     }
 
@@ -44,7 +44,7 @@ class SiswaIzinKeluarExport implements
             $row->nama,
             $row->nis,
             $row->kelas,
-            $row->alasan,
+            $row->keperluan,
             $row->jam_izin,
             $row->jam_kembali,
 
@@ -52,7 +52,9 @@ class SiswaIzinKeluarExport implements
                 ? asset('storage/' . $row->paraf_guru)
                 : '-',
 
-            $row->created_at->format('d-m-Y H:i'),
+            $row->tanggal
+                ? \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y')
+                : '-',
         ];
     }
 }

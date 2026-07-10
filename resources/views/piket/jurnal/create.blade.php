@@ -104,6 +104,8 @@
 <script>
 const jadwals = @json($jadwals);
 
+console.log(jadwals);
+
 const kelas = document.getElementById('kelas_id');
 const hari = document.getElementById('hari');
 const jam = document.getElementById('jam_ke');
@@ -113,21 +115,39 @@ const guru = document.getElementById('guru');
 const ruangan = document.getElementById('ruangan');
 
 function isiJadwal() {
+
+    console.log({
+        kelas: kelas.value,
+        hari: hari.value,
+        jam: jam.value
+    });
+
     const selected = jadwals.find(j =>
         j.kelas_id == kelas.value &&
         j.hari == hari.value &&
         j.jam_ke == jam.value
     );
 
-    if (selected) {
-        mapel.value = selected.mapel ? selected.mapel.nama : '';
-        guru.value = selected.guru ? selected.guru.nama : '';
-        ruangan.value = selected.ruangan ? selected.ruangan.nama : '';
-    } else {
-        mapel.value = '';
-        guru.value = '';
-        ruangan.value = '';
+    console.log(selected);
+
+    if (!selected) {
+
+        mapel.value = 'Jadwal tidak ditemukan';
+        guru.value = 'Jadwal tidak ditemukan';
+        ruangan.value = 'Jadwal tidak ditemukan';
+
+        console.warn('Tidak ada jadwal yang cocok', {
+            kelas: kelas.value,
+            hari: hari.value,
+            jam: jam.value
+        });
+
+        return;
     }
+
+    mapel.value = selected.mapel?.nama ?? '';
+    guru.value = selected.guru?.nama ?? '';
+    ruangan.value = selected.ruangan?.nama ?? '';
 }
 
 kelas.addEventListener('change', isiJadwal);

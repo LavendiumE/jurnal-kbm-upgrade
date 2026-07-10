@@ -88,9 +88,9 @@
             {{-- Alasan --}}
             <div>
                 <label class="block text-sm font-medium mb-2">Alasan</label>
-                <textarea name="alasan"
-                          rows="3"
-                          class="w-full border rounded px-3 py-2">{{ $data->alasan }}</textarea>
+                <textarea name="keperluan"
+                rows="3"
+                class="w-full border rounded px-3 py-2">{{ old('keperluan', $data->keperluan) }}</textarea>
             </div>
 
             {{-- Upload Paraf Guru --}}

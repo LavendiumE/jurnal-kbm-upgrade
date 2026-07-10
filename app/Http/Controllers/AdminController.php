@@ -54,4 +54,19 @@ class AdminController extends Controller
 
         return back()->with('success', 'User berhasil di-approve.');
     }
+
+    // Hapus user yang belum di-approve
+    public function destroy($id)
+    {
+        $user = User::findOrFail($id);
+
+        // Biar aman, hanya boleh menghapus user yang belum approve
+        if ($user->is_approved) {
+            return back()->with('error', 'User yang sudah di-approve tidak dapat dihapus.');
+        }
+
+        $user->delete();
+
+        return back()->with('success', 'User berhasil dihapus.');
+    }
 }

@@ -96,7 +96,7 @@
                     Alasan
                 </label>
 
-                <textarea name="alasan"
+                <textarea name="keperluan"
                           rows="3"
                           class="w-full border rounded px-3 py-2"
                           placeholder="Tuliskan alasan izin keluar"></textarea>

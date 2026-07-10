@@ -18,11 +18,12 @@
 
         <div class="flex gap-3 text-sm">
             <a href="{{ route('piket.perizinan.keluar.create') }}"
-            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+               class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
                 + Tambah Data
             </a>
+
             <a href="{{ route('piket.perizinan.keluar.export') }}"
-                class="px-4 py-2 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition">
+               class="px-4 py-2 border border-blue-500 text-blue-600 rounded-md hover:bg-blue-50 transition">
                 Export
             </a>
         </div>
@@ -39,8 +40,8 @@
                     <th class="px-4 py-3 border text-center">Nama</th>
                     <th class="px-4 py-3 border text-center">NIS</th>
                     <th class="px-4 py-3 border text-center">Kelas</th>
-                    <th class="px-4 py-3 border text-center">Alasan</th>
-                    <th class="px-4 py-3 border text-center">Jam Izin</th>
+                    <th class="px-4 py-3 border text-center">Keperluan</th>
+                    <th class="px-4 py-3 border text-center">Jam Keluar</th>
                     <th class="px-4 py-3 border text-center">Jam Kembali</th>
                     <th class="px-4 py-3 border text-center">Aksi</th>
                 </tr>
@@ -51,13 +52,29 @@
                 @forelse($data as $item)
                 <tr class="border-t">
 
-                    <td class="px-4 py-3 border text-center">{{ $item->nama }}</td>
-                    <td class="px-4 py-3 border text-center">{{ $item->nis }}</td>
-                    <td class="px-4 py-3 border text-center">{{ $item->kelas->nama ?? $item->kelas ?? '-' }}</td>
-                    <td class="px-4 py-3 border text-center">{{ $item->alasan }}</td>
-                    <td class="px-4 py-3 border text-center">{{ $item->jam_izin }}</td>
-                    <td class="px-4 py-3 border text-center">{{ $item->jam_kembali }}</td>
-                    
+                    <td class="px-4 py-3 border text-center">
+                        {{ $item->nama }}
+                    </td>
+
+                    <td class="px-4 py-3 border text-center">
+                        {{ $item->nis }}
+                    </td>
+
+                    <td class="px-4 py-3 border text-center">
+                        {{ $item->kelas->nama ?? $item->kelas ?? '-' }}
+                    </td>
+
+                    <td class="px-4 py-3 border text-center">
+                        {{ $item->keperluan }}
+                    </td>
+
+                    <td class="px-4 py-3 border text-center">
+                        {{ $item->jam_izin }}
+                    </td>
+
+                    <td class="px-4 py-3 border text-center">
+                        {{ $item->jam_kembali ?? '-' }}
+                    </td>
 
                     <td class="px-4 py-3 border text-center">
                         <div class="flex justify-center gap-2">
@@ -70,7 +87,7 @@
                             <span class="text-gray-400">|</span>
 
                             <form action="{{ route('piket.perizinan.keluar.destroy', $item->id) }}"
-                            method="POST">
+                                  method="POST">
                                 @csrf
                                 @method('DELETE')
 
@@ -86,7 +103,7 @@
 
                 @empty
                 <tr>
-                    <td colspan="6" class="p-4 text-center text-gray-400">
+                    <td colspan="7" class="p-4 text-center text-gray-400">
                         Belum ada data izin keluar
                     </td>
                 </tr>

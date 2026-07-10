@@ -12,7 +12,6 @@ class SiswaIzinKeluar extends Model
         'kelas',
         'kelas_id',
         'keperluan',
-        'alasan',
         'jam_izin',
         'jam_kembali',
         'paraf_guru',
