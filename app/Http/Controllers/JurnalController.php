@@ -14,6 +14,7 @@ use App\Exports\MyJurnalsExport;
 use App\Models\Informasi;
 use App\Models\Setting;
 use Carbon\Carbon;
+use Exception;
 
 class JurnalController extends Controller
 {
@@ -99,7 +100,7 @@ class JurnalController extends Controller
             'sakit' => 'nullable|string',
             'alfa' => 'nullable|string',
             'pkl' => 'nullable|string',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:10240',
             'file_izin_guru' => 'nullable|file|max:2048',
         ]);
 
@@ -160,7 +161,67 @@ class JurnalController extends Controller
         $validated['tipe'] = 'guru';
 
         if ($request->hasFile('foto')) {
-            $validated['foto'] = $request->file('foto')->store('jurnal-guru', 'public');
+
+            $file = $request->file('foto');
+
+            $imageInfo = getimagesize($file->getPathname());
+            $mime = $imageInfo['mime'];
+
+            if ($mime === 'image/jpeg') {
+                $source = imagecreatefromjpeg($file->getPathname());
+
+            } elseif ($mime === 'image/png') {
+                $source = imagecreatefrompng($file->getPathname());
+
+            } elseif ($mime === 'image/webp') {
+                $source = imagecreatefromwebp($file->getPathname());
+
+            } else {
+                throw new Exception('Format gambar tidak didukung.');
+            }
+
+            $width = imagesx($source);
+            $height = imagesy($source);
+
+            $newWidth = 1280;
+            $newHeight = intval($height * ($newWidth / $width));
+
+            if ($width < 1280) {
+                $newWidth = $width;
+                $newHeight = $height;
+            }
+
+            $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+            imagecopyresampled(
+                $canvas,
+                $source,
+                0,
+                0,
+                0,
+                0,
+                $newWidth,
+                $newHeight,
+                $width,
+                $height
+            );
+
+            $folder = 'jurnal-guru/' . now()->format('Y-m');
+            $filename = uniqid('jurnal_') . '.jpg';
+
+            ob_start();
+            imagejpeg($canvas, null, 75);
+            $imageData = ob_get_clean();
+
+            Storage::disk('public')->put(
+                $folder . '/' . $filename,
+                $imageData
+            );
+
+            imagedestroy($source);
+            imagedestroy($canvas);
+
+            $validated['foto'] = $folder . '/' . $filename;
         }
 
         Jurnal::create($validated);
@@ -194,11 +255,71 @@ class JurnalController extends Controller
         ]);
 
         if ($request->hasFile('foto')) {
+
             if ($jurnal->foto) {
                 Storage::disk('public')->delete($jurnal->foto);
             }
 
-            $validated['foto'] = $request->file('foto')->store('jurnal-guru', 'public');
+            $file = $request->file('foto');
+
+            $imageInfo = getimagesize($file->getPathname());
+            $mime = $imageInfo['mime'];
+
+            if ($mime === 'image/jpeg') {
+                $source = imagecreatefromjpeg($file->getPathname());
+
+            } elseif ($mime === 'image/png') {
+                $source = imagecreatefrompng($file->getPathname());
+
+            } elseif ($mime === 'image/webp') {
+                $source = imagecreatefromwebp($file->getPathname());
+
+            } else {
+                throw new Exception('Format gambar tidak didukung.');
+            }
+
+            $width = imagesx($source);
+            $height = imagesy($source);
+
+            $newWidth = 1280;
+            $newHeight = intval($height * ($newWidth / $width));
+
+            if ($width < 1280) {
+                $newWidth = $width;
+                $newHeight = $height;
+            }
+
+            $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+            imagecopyresampled(
+                $canvas,
+                $source,
+                0,
+                0,
+                0,
+                0,
+                $newWidth,
+                $newHeight,
+                $width,
+                $height
+            );
+
+            $folder = 'jurnal-guru/' . now()->format('Y-m');
+            $filename = uniqid('jurnal_') . '.jpg';
+
+            ob_start();
+            imagejpeg($canvas, null, 75);
+            $imageData = ob_get_clean();
+
+            Storage::disk('public')->put(
+                $folder . '/' . $filename,
+                $imageData
+            );
+
+            imagedestroy($source);
+            imagedestroy($canvas);
+
+            $validated['foto'] = $folder . '/' . $filename;
         }
 
         if ($request->hasFile('file_izin_guru')) {

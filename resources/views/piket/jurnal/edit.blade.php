@@ -105,6 +105,8 @@
 
                 <input type="file"
                        name="foto"
+                       accept="image/*"
+                       capture="environment"
                        class="w-full border rounded px-3 py-2">
 
                 @if($data->foto)

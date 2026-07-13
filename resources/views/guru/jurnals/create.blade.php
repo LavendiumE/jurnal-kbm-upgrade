@@ -162,6 +162,7 @@
             <input type="file"
                    name="foto"
                    accept="image/*"
+                   capture="environment"
                    class="mt-1 w-full border rounded px-3 py-2">
         </div>
 

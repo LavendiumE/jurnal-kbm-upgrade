@@ -8,6 +8,8 @@ use App\Models\Jadwal;
 use Illuminate\Http\Request;
 use App\Exports\JurnalPiketExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Exception;
+use Illuminate\Support\Facades\Storage;
 
 class JurnalPiketController extends Controller
 {
@@ -41,7 +43,7 @@ class JurnalPiketController extends Controller
             'kelas_id' => 'required',
             'hari' => 'required',
             'jam_ke' => 'required',
-            'foto' => 'nullable|image|max:2048',
+            'foto' => 'nullable|image|max:10240',
         ]);
 
         $jadwal = Jadwal::where('kelas_id', $request->kelas_id)
@@ -61,7 +63,72 @@ class JurnalPiketController extends Controller
         ];
 
         if ($request->hasFile('foto')) {
-            $data['foto'] = $request->file('foto')->store('jurnal-piket', 'public');
+
+            $file = $request->file('foto');
+
+            $imageInfo = getimagesize($file->getPathname());
+            $mime = $imageInfo['mime'];
+
+            if ($mime === 'image/jpeg') {
+
+                $source = imagecreatefromjpeg($file->getPathname());
+
+            } elseif ($mime === 'image/png') {
+
+                $source = imagecreatefrompng($file->getPathname());
+
+            } elseif ($mime === 'image/webp') {
+
+                $source = imagecreatefromwebp($file->getPathname());
+
+            } else {
+
+                throw new Exception('Format gambar tidak didukung.');
+
+            }
+
+            $width = imagesx($source);
+            $height = imagesy($source);
+
+            $newWidth = 1280;
+            $newHeight = intval($height * ($newWidth / $width));
+
+            if ($width < 1280) {
+                $newWidth = $width;
+                $newHeight = $height;
+            }
+
+            $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+            imagecopyresampled(
+                $canvas,
+                $source,
+                0,
+                0,
+                0,
+                0,
+                $newWidth,
+                $newHeight,
+                $width,
+                $height
+            );
+
+            $folder = 'jurnal-piket/' . now()->format('Y-m');
+            $filename = uniqid('piket_') . '.jpg';
+
+            ob_start();
+            imagejpeg($canvas, null, 75);
+            $imageData = ob_get_clean();
+
+            Storage::disk('public')->put(
+                $folder.'/'.$filename,
+                $imageData
+            );
+
+            imagedestroy($source);
+            imagedestroy($canvas);
+
+            $data['foto'] = $folder.'/'.$filename;
         }
 
         Jurnal::create($data);
@@ -98,7 +165,76 @@ class JurnalPiketController extends Controller
         ];
 
         if ($request->hasFile('foto')) {
-            $update['foto'] = $request->file('foto')->store('jurnal-piket', 'public');
+
+            if ($data->foto) {
+                Storage::disk('public')->delete($data->foto);
+            }
+
+            $file = $request->file('foto');
+
+            $imageInfo = getimagesize($file->getPathname());
+            $mime = $imageInfo['mime'];
+
+            if ($mime === 'image/jpeg') {
+
+                $source = imagecreatefromjpeg($file->getPathname());
+
+            } elseif ($mime === 'image/png') {
+
+                $source = imagecreatefrompng($file->getPathname());
+
+            } elseif ($mime === 'image/webp') {
+
+                $source = imagecreatefromwebp($file->getPathname());
+
+            } else {
+
+                throw new Exception('Format gambar tidak didukung.');
+
+            }
+
+            $width = imagesx($source);
+            $height = imagesy($source);
+
+            $newWidth = 1280;
+            $newHeight = intval($height * ($newWidth / $width));
+
+            if ($width < 1280) {
+                $newWidth = $width;
+                $newHeight = $height;
+            }
+
+            $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+            imagecopyresampled(
+                $canvas,
+                $source,
+                0,
+                0,
+                0,
+                0,
+                $newWidth,
+                $newHeight,
+                $width,
+                $height
+            );
+
+            $folder = 'jurnal-piket/' . now()->format('Y-m');
+            $filename = uniqid('piket_') . '.jpg';
+
+            ob_start();
+            imagejpeg($canvas, null, 75);
+            $imageData = ob_get_clean();
+
+            Storage::disk('public')->put(
+                $folder.'/'.$filename,
+                $imageData
+            );
+
+            imagedestroy($source);
+            imagedestroy($canvas);
+
+            $update['foto'] = $folder.'/'.$filename;
         }
 
         $data->update($update);
@@ -112,7 +248,7 @@ class JurnalPiketController extends Controller
         $data = Jurnal::findOrFail($id);
 
         if ($data->foto) {
-            \Storage::disk('public')->delete($data->foto);
+            Storage::disk('public')->delete($data->foto);
         }
 
         $data->delete();

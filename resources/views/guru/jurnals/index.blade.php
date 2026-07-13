@@ -155,6 +155,9 @@
                     <th class="border px-4 py-3 text-center">Kelas</th>
                     <th class="border px-4 py-3 text-center">Mapel</th>
                     <th class="border px-4 py-3 text-left">Materi</th>
+                    <th class="border px-4 py-3 text-center">
+                        Foto
+                    </th>
                     <th class="border px-4 py-3 text-center">Aksi</th>
                 </tr>
             </thead>
@@ -187,6 +190,26 @@
 
                     <td class="border px-4 py-3">
                         {{ $jurnal->materi ?? '-' }}
+                    </td>
+
+                    <td class="border px-4 py-3 text-center">
+
+                        @if($jurnal->foto)
+
+                            <a href="{{ asset('storage/'.$jurnal->foto) }}"
+                            target="_blank"
+                            class="text-blue-600 hover:underline">
+
+                                Lihat
+
+                            </a>
+
+                        @else
+
+                            -
+
+                        @endif
+
                     </td>
 
                     <td class="border px-4 py-3 text-center">

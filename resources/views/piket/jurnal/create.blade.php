@@ -80,7 +80,12 @@
             {{-- FOTO --}}
             <div>
                 <label class="block text-sm font-medium mb-2">Upload Bukti Foto</label>
-                <input type="file" name="foto" class="w-full border rounded px-3 py-2">
+                <input 
+                type="file" 
+                name="foto" 
+                accept="image/*"
+                capture="environment"
+                class="w-full border rounded px-3 py-2">
             </div>
 
         </div>

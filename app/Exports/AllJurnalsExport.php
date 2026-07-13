@@ -29,15 +29,15 @@ class AllJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'jadwal.ruangan',
             'jadwal.mapel'
         ])
-        ->orderBy('tanggal', 'asc');
+        ->orderBy('created_at', 'asc');
 
         if ($this->tanggalAwal && $this->tanggalAkhir) {
 
             $query->whereBetween(
-                'tanggal',
+                'created_at',
                 [
-                    $this->tanggalAwal,
-                    $this->tanggalAkhir
+                   $this->tanggalAwal . ' 00:00:00',
+                   $this->tanggalAkhir . ' 23:59:59',
                 ]
             );
         }
@@ -51,7 +51,7 @@ class AllJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             return [
 
                 'Tanggal' =>
-                    optional($jurnal->tanggal)
+                    optional($jurnal->created_at)
                     ?->format('d-m-Y'),
 
                 'Jam Mulai' =>
