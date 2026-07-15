@@ -43,7 +43,7 @@ class JurnalPiketController extends Controller
             'kelas_id' => 'required',
             'hari' => 'required',
             'jam_ke' => 'required',
-            'foto' => 'nullable|image|max:10240',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
         $jadwal = Jadwal::where('kelas_id', $request->kelas_id)
@@ -196,13 +196,8 @@ class JurnalPiketController extends Controller
             $width = imagesx($source);
             $height = imagesy($source);
 
-            $newWidth = 1280;
+            $newWidth = min($width, 1280);
             $newHeight = intval($height * ($newWidth / $width));
-
-            if ($width < 1280) {
-                $newWidth = $width;
-                $newHeight = $height;
-            }
 
             $canvas = imagecreatetruecolor($newWidth, $newHeight);
 

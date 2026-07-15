@@ -7,6 +7,8 @@ use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SiswaPulangAwalExport;
+use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class SiswaPulangAwalController extends Controller
 {
@@ -32,11 +34,74 @@ class SiswaPulangAwalController extends Controller
             'kelas' => 'required|string',
             'keperluan' => 'required|string',
             'jam_izin' => 'required',
-            'paraf_guru' => 'nullable|file',
+            'paraf_guru' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,mp4,mov,avi,mkv|max:20480',
         ]);
 
         if ($request->hasFile('paraf_guru')) {
-            $validated['paraf_guru'] = $request->file('paraf_guru')->store('paraf-guru', 'public');
+
+            $file = $request->file('paraf_guru');
+
+            if (str_starts_with($file->getMimeType(), 'image/')) {
+
+                $imageInfo = getimagesize($file->getPathname());
+                $mime = $imageInfo['mime'];
+
+                if ($mime === 'image/jpeg') {
+                    $source = imagecreatefromjpeg($file->getPathname());
+
+                } elseif ($mime === 'image/png') {
+                    $source = imagecreatefrompng($file->getPathname());
+
+                } elseif ($mime === 'image/webp') {
+                    $source = imagecreatefromwebp($file->getPathname());
+
+                } else {
+                    throw new Exception('Format gambar tidak didukung.');
+                }
+
+                $width = imagesx($source);
+                $height = imagesy($source);
+
+                $newWidth = min($width, 1280);
+                $newHeight = intval($height * ($newWidth / $width));
+
+                $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+                imagecopyresampled(
+                    $canvas,
+                    $source,
+                    0,
+                    0,
+                    0,
+                    0,
+                    $newWidth,
+                    $newHeight,
+                    $width,
+                    $height
+                );
+
+                $folder = 'paraf-guru/' . now()->format('Y-m');
+                $filename = uniqid('paraf_') . '.jpg';
+
+                ob_start();
+                imagejpeg($canvas, null, 75);
+                $imageData = ob_get_clean();
+
+                Storage::disk('public')->put(
+                    $folder.'/'.$filename,
+                    $imageData
+                );
+
+                imagedestroy($source);
+                imagedestroy($canvas);
+
+                $validated['paraf_guru'] = $folder.'/'.$filename;
+
+            } else {
+
+                $validated['paraf_guru'] = $file->store('paraf-guru', 'public');
+
+            }
         }
 
         $validated['user_id'] = auth()->id();
@@ -67,18 +132,87 @@ class SiswaPulangAwalController extends Controller
             'kelas' => 'required|string',
             'keperluan' => 'required|string',
             'jam_izin' => 'required',
+            'paraf_guru' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,mp4,mov,avi,mkv|max:20480',
         ]);
 
         $validated['tanggal'] = now()->toDateString();
 
+        if ($request->hasFile('paraf_guru')) {
+
+            if ($izin->paraf_guru) {
+                Storage::disk('public')->delete($izin->paraf_guru);
+            }
+
+            $file = $request->file('paraf_guru');
+
+            if (str_starts_with($file->getMimeType(), 'image/')) {
+
+                $imageInfo = getimagesize($file->getPathname());
+                $mime = $imageInfo['mime'];
+
+                if ($mime === 'image/jpeg') {
+                    $source = imagecreatefromjpeg($file->getPathname());
+
+                } elseif ($mime === 'image/png') {
+                    $source = imagecreatefrompng($file->getPathname());
+
+                } elseif ($mime === 'image/webp') {
+                    $source = imagecreatefromwebp($file->getPathname());
+
+                } else {
+                    throw new Exception('Format gambar tidak didukung.');
+                }
+
+                $width = imagesx($source);
+                $height = imagesy($source);
+
+                $newWidth = min($width, 1280);
+                $newHeight = intval($height * ($newWidth / $width));
+
+                $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+                imagecopyresampled(
+                    $canvas,
+                    $source,
+                    0,
+                    0,
+                    0,
+                    0,
+                    $newWidth,
+                    $newHeight,
+                    $width,
+                    $height
+                );
+
+                $folder = 'paraf-guru/' . now()->format('Y-m');
+                $filename = uniqid('paraf_') . '.jpg';
+
+                ob_start();
+                imagejpeg($canvas, null, 75);
+                $imageData = ob_get_clean();
+
+                Storage::disk('public')->put(
+                    $folder.'/'.$filename,
+                    $imageData
+                );
+
+                imagedestroy($source);
+                imagedestroy($canvas);
+
+                $validated['paraf_guru'] = $folder.'/'.$filename;
+
+            } else {
+
+                $validated['paraf_guru'] = $file->store('paraf-guru', 'public');
+
+            }
+        }
+
         $izin->update($validated);
 
-        return redirect()->route('piket.perizinan.pulang.index')
+        return redirect()
+            ->route('piket.perizinan.pulang.index')
             ->with('success', 'Data berhasil diupdate');
-
-        if ($request->hasFile('paraf_guru')) {
-            $validated['paraf_guru'] = $request->file('paraf_guru')->store('paraf-pulang-awal', 'public');
-        }
     }
 
     public function destroy($id)

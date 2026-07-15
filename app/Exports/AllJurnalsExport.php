@@ -89,6 +89,8 @@ class AllJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
 
                 'Alfa' =>
                     $jurnal->alfa ?? 0,
+                'PKL' =>
+                    $jurnal->pkl ?? '-',
 
                 'Foto' => $fotoUrl,
             ];
@@ -111,6 +113,7 @@ class AllJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Izin',
             'Sakit',
             'Alfa',
+            'Pkl',
             'Foto',
         ];
     }

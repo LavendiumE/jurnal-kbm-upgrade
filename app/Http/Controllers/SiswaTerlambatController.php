@@ -8,6 +8,8 @@ use App\Models\Guru;
 use Illuminate\Http\Request;
 use App\Exports\SiswaTerlambatExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class SiswaTerlambatController extends Controller
 {
@@ -42,11 +44,74 @@ class SiswaTerlambatController extends Controller
             'alasan' => 'nullable|string',
             'guru_pembina_id' => 'nullable',
             'pembinaan' => 'nullable|string',
-            'paraf_guru' => 'nullable|file',
+            'paraf_guru' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,mp4,mov,avi,mkv|max:20480',
         ]);
 
         if ($request->hasFile('paraf_guru')) {
-            $validated['paraf_guru'] = $request->file('paraf_guru')->store('paraf-terlambat', 'public');
+
+            $file = $request->file('paraf_guru');
+
+            if (str_starts_with($file->getMimeType(), 'image/')) {
+
+                $imageInfo = getimagesize($file->getPathname());
+                $mime = $imageInfo['mime'];
+
+                if ($mime === 'image/jpeg') {
+                    $source = imagecreatefromjpeg($file->getPathname());
+
+                } elseif ($mime === 'image/png') {
+                    $source = imagecreatefrompng($file->getPathname());
+
+                } elseif ($mime === 'image/webp') {
+                    $source = imagecreatefromwebp($file->getPathname());
+
+                } else {
+                    throw new Exception('Format gambar tidak didukung.');
+                }
+
+                $width = imagesx($source);
+                $height = imagesy($source);
+
+                $newWidth = min($width, 1280);
+                $newHeight = intval($height * ($newWidth / $width));
+
+                $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+                imagecopyresampled(
+                    $canvas,
+                    $source,
+                    0,
+                    0,
+                    0,
+                    0,
+                    $newWidth,
+                    $newHeight,
+                    $width,
+                    $height
+                );
+
+                $folder = 'paraf-terlambat/' . now()->format('Y-m');
+                $filename = uniqid('paraf_') . '.jpg';
+
+                ob_start();
+                imagejpeg($canvas, null, 75);
+                $imageData = ob_get_clean();
+
+                Storage::disk('public')->put(
+                    $folder.'/'.$filename,
+                    $imageData
+                );
+
+                imagedestroy($source);
+                imagedestroy($canvas);
+
+                $validated['paraf_guru'] = $folder.'/'.$filename;
+
+            } else {
+
+                $validated['paraf_guru'] = $file->store('paraf-terlambat', 'public');
+
+            }
         }
 
         $validated['user_id'] = auth()->id();
@@ -82,11 +147,78 @@ class SiswaTerlambatController extends Controller
             'alasan' => 'nullable|string',
             'guru_pembina_id' => 'nullable',
             'pembinaan' => 'nullable|string',
-            'paraf_guru' => 'nullable|file',
+            'paraf_guru' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,mp4,mov,avi,mkv|max:20480',
         ]);
 
         if ($request->hasFile('paraf_guru')) {
-            $validated['paraf_guru'] = $request->file('paraf_guru')->store('paraf-terlambat', 'public');
+
+            if ($data->paraf_guru) {
+                Storage::disk('public')->delete($data->paraf_guru);
+            }
+
+            $file = $request->file('paraf_guru');
+
+            if (str_starts_with($file->getMimeType(), 'image/')) {
+
+                $imageInfo = getimagesize($file->getPathname());
+                $mime = $imageInfo['mime'];
+
+                if ($mime === 'image/jpeg') {
+                    $source = imagecreatefromjpeg($file->getPathname());
+
+                } elseif ($mime === 'image/png') {
+                    $source = imagecreatefrompng($file->getPathname());
+
+                } elseif ($mime === 'image/webp') {
+                    $source = imagecreatefromwebp($file->getPathname());
+
+                } else {
+                    throw new Exception('Format gambar tidak didukung.');
+                }
+
+                $width = imagesx($source);
+                $height = imagesy($source);
+
+                $newWidth = min($width, 1280);
+                $newHeight = intval($height * ($newWidth / $width));
+
+                $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+                imagecopyresampled(
+                    $canvas,
+                    $source,
+                    0,
+                    0,
+                    0,
+                    0,
+                    $newWidth,
+                    $newHeight,
+                    $width,
+                    $height
+                );
+
+                $folder = 'paraf-terlambat/' . now()->format('Y-m');
+                $filename = uniqid('paraf_') . '.jpg';
+
+                ob_start();
+                imagejpeg($canvas, null, 75);
+                $imageData = ob_get_clean();
+
+                Storage::disk('public')->put(
+                    $folder.'/'.$filename,
+                    $imageData
+                );
+
+                imagedestroy($source);
+                imagedestroy($canvas);
+
+                $validated['paraf_guru'] = $folder.'/'.$filename;
+
+            } else {
+
+                $validated['paraf_guru'] = $file->store('paraf-terlambat', 'public');
+
+            }
         }
 
         $validated['tanggal'] = now()->toDateString();
@@ -100,6 +232,10 @@ class SiswaTerlambatController extends Controller
     public function destroy($id)
     {
         $data = SiswaTerlambat::findOrFail($id);
+
+        if ($data->paraf_guru) {
+            Storage::disk('public')->delete($data->paraf_guru);
+        }
 
         $data->delete();
 
