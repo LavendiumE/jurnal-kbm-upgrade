@@ -12,22 +12,19 @@ use Illuminate\Support\Str;
 
         <h1 class="text-xl font-semibold">
 
-            Jurnal KBM
+            Jurnal Guru Piket
 
         </h1>
 
-        <button
-            data-modal-target="exportModal"
-            data-modal-toggle="exportModal"
-            class="px-4 py-2 border border-blue-500
-            text-blue-600 rounded">
+        <a
+            href="{{ route('admin.jurnal-piket.export') }}"
+            class="px-4 py-2 border border-blue-500 text-blue-600 rounded hover:bg-blue-50">
 
             Export All
 
-        </button>
+        </a>
 
     </div>
-
 
     <div class="bg-white border rounded-lg overflow-hidden">
 
@@ -54,7 +51,11 @@ use Illuminate\Support\Str;
                     </th>
 
                     <th class="border px-4 py-3">
-                        Materi
+                        Jam
+                    </th>
+
+                    <th class="border px-4 py-3">
+                        Ruangan
                     </th>
 
                     <th class="border px-4 py-3">
@@ -95,9 +96,17 @@ use Illuminate\Support\Str;
 
                 </td>
 
-                <td class="border px-4 py-3">
+                <td class="border px-4 py-3 text-center">
 
-                    {{ Str::limit($jurnal->materi, 40) }}
+                    {{ $jurnal->jadwal->jam_mulai ?? '-' }}
+                    -
+                    {{ $jurnal->jadwal->jam_selesai ?? '-' }}
+
+                </td>
+
+                <td class="border px-4 py-3 text-center">
+
+                    {{ $jurnal->jadwal->ruangan->nama ?? '-' }}
 
                 </td>
 
@@ -128,7 +137,7 @@ use Illuminate\Support\Str;
                         <div>
 
                             <h2 class="text-xl font-bold text-gray-800">
-                                Detail Jurnal KBM
+                                Detail Jurnal Guru Piket
                             </h2>
 
                             <p class="text-sm text-gray-500 mt-1">
@@ -167,9 +176,32 @@ use Illuminate\Support\Str;
                             </div>
 
                             <div class="bg-gray-50 rounded-xl p-4">
-                                <p class="text-xs text-gray-500 uppercase">Mata Pelajaran</p>
+                                <p class="text-xs text-gray-500 uppercase">Mapel</p>
                                 <p class="font-semibold mt-1">
                                     {{ $jurnal->jadwal->mapel->nama ?? '-' }}
+                                </p>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <p class="text-xs text-gray-500 uppercase">Ruangan</p>
+                                <p class="font-semibold mt-1">
+                                    {{ $jurnal->jadwal->ruangan->nama ?? '-' }}
+                                </p>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <p class="text-xs text-gray-500 uppercase">Jam</p>
+                                <p class="font-semibold mt-1">
+                                    {{ $jurnal->jadwal->jam_mulai ?? '-' }}
+                                    -
+                                    {{ $jurnal->jadwal->jam_selesai ?? '-' }}
+                                </p>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <p class="text-xs text-gray-500 uppercase">PKL</p>
+                                <p class="font-semibold mt-1">
+                                    {{ $jurnal->pkl ?? '-' }}
                                 </p>
                             </div>
 
@@ -179,7 +211,9 @@ use Illuminate\Support\Str;
                         <div>
 
                             <h3 class="font-semibold text-gray-700 mb-2">
+
                                 Materi
+
                             </h3>
 
                             <div class="bg-gray-50 rounded-xl p-4 text-gray-700 leading-relaxed">
@@ -194,7 +228,9 @@ use Illuminate\Support\Str;
                         <div>
 
                             <h3 class="font-semibold text-gray-700 mb-2">
+
                                 Kegiatan
+
                             </h3>
 
                             <div class="bg-gray-50 rounded-xl p-4 text-gray-700 leading-relaxed">
@@ -205,11 +241,13 @@ use Illuminate\Support\Str;
 
                         </div>
 
-                        {{-- Rekap Kehadiran --}}
+                        {{-- Kehadiran --}}
                         <div>
 
                             <h3 class="font-semibold text-gray-700 mb-3">
+
                                 Rekap Kehadiran
+
                             </h3>
 
                             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -219,7 +257,9 @@ use Illuminate\Support\Str;
                                     <p class="text-sm text-gray-500">Hadir</p>
 
                                     <p class="text-2xl font-bold text-green-600">
+
                                         {{ $jurnal->hadir ?? 0 }}
+
                                     </p>
 
                                 </div>
@@ -229,7 +269,9 @@ use Illuminate\Support\Str;
                                     <p class="text-sm text-gray-500">Izin</p>
 
                                     <p class="text-2xl font-bold text-blue-600">
+
                                         {{ $jurnal->izin ?? 0 }}
+
                                     </p>
 
                                 </div>
@@ -239,7 +281,9 @@ use Illuminate\Support\Str;
                                     <p class="text-sm text-gray-500">Sakit</p>
 
                                     <p class="text-2xl font-bold text-yellow-600">
+
                                         {{ $jurnal->sakit ?? 0 }}
+
                                     </p>
 
                                 </div>
@@ -249,7 +293,9 @@ use Illuminate\Support\Str;
                                     <p class="text-sm text-gray-500">Alfa</p>
 
                                     <p class="text-2xl font-bold text-red-600">
+
                                         {{ $jurnal->alfa ?? 0 }}
+
                                     </p>
 
                                 </div>
@@ -264,7 +310,9 @@ use Illuminate\Support\Str;
                         <div>
 
                             <h3 class="font-semibold text-gray-700 mb-3">
+
                                 Dokumentasi
+
                             </h3>
 
                             <div class="flex justify-center">
@@ -284,15 +332,14 @@ use Illuminate\Support\Str;
                 </div>
 
             </div>
-
             @empty
 
             <tr>
 
-                <td colspan="6"
+                <td colspan="7"
                     class="text-center py-8">
 
-                    Belum ada jurnal
+                    Belum ada jurnal guru piket
 
                 </td>
 
@@ -312,66 +359,7 @@ use Illuminate\Support\Str;
 
     </div>
 
-
-    {{-- MODAL EXPORT --}}
-    <div id="exportModal"
-        class="hidden fixed inset-0
-        bg-black/50 z-50
-        flex items-center justify-center">
-
-        <div class="bg-white rounded-xl p-6 w-full max-w-md">
-
-            <form
-                action="{{ route('admin.jurnals.export') }}"
-                method="GET">
-
-                <div class="space-y-4">
-
-                    <div>
-
-                        <label>Tanggal Awal</label>
-
-                        <input
-                            type="date"
-                            name="tanggal_awal"
-                            class="w-full border rounded p-2">
-
-                    </div>
-
-                    <div>
-
-                        <label>Tanggal Akhir</label>
-
-                        <input
-                            type="date"
-                            name="tanggal_akhir"
-                            class="w-full border rounded p-2">
-
-                    </div>
-
-                </div>
-
-                <div class="flex justify-end mt-6">
-
-                    <button
-                        type="submit"
-                        class="bg-blue-600 text-white
-                        px-4 py-2 rounded">
-
-                        Download
-
-                    </button>
-
-                </div>
-
-            </form>
-
-        </div>
-
-    </div>
-
 </div>
-
 
 <script>
 

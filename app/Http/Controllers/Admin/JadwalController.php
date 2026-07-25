@@ -15,6 +15,25 @@ use Maatwebsite\Excel\Facades\Excel;
 
 class JadwalController extends Controller
 {
+
+    private function getJamPelajaran()
+    {
+        $setting = \App\Models\Setting::first();
+
+        return [
+            1  => [$setting->jam1_mulai,  $setting->jam1_selesai],
+            2  => [$setting->jam2_mulai,  $setting->jam2_selesai],
+            3  => [$setting->jam3_mulai,  $setting->jam3_selesai],
+            4  => [$setting->jam4_mulai,  $setting->jam4_selesai],
+            5  => [$setting->jam5_mulai,  $setting->jam5_selesai],
+            6  => [$setting->jam6_mulai,  $setting->jam6_selesai],
+            7  => [$setting->jam7_mulai,  $setting->jam7_selesai],
+            8  => [$setting->jam8_mulai,  $setting->jam8_selesai],
+            9  => [$setting->jam9_mulai,  $setting->jam9_selesai],
+            10 => [$setting->jam10_mulai, $setting->jam10_selesai],
+        ];
+    }
+
     public function index()
     {
         $jadwals = Jadwal::with(['guru', 'kelas', 'mapel', 'ruangan'])
@@ -28,18 +47,7 @@ class JadwalController extends Controller
 
     public function create()
     {
-        $defaultJam = [
-            1 => ['07:00', '07:45'],
-            2 => ['07:45', '08:30'],
-            3 => ['08:30', '09:15'],
-            4 => ['09:30', '10:15'],
-            5 => ['10:15', '11:00'],
-            6 => ['11:00', '11:45'],
-            7 => ['12:30', '13:15'],
-            8 => ['13:15', '14:00'],
-            9 => ['14:00', '14:45'],
-            10 => ['14:45', '15:30'],
-        ];
+        $defaultJam = $this->getJamPelajaran();
 
         return view('admin.jadwals.create', [
             'gurus' => Guru::whereHas('user', function ($query) {
@@ -67,18 +75,7 @@ class JadwalController extends Controller
             'batas_jurnal_menit.*' => 'nullable|integer|min:1',
         ]);
 
-        $jam_pelajaran = [
-            1 => ['07:00', '07:45'],
-            2 => ['07:45', '08:30'],
-            3 => ['08:30', '09:15'],
-            4 => ['09:30', '10:15'],
-            5 => ['10:15', '11:00'],
-            6 => ['11:00', '11:45'],
-            7 => ['12:30', '13:15'],
-            8 => ['13:15', '14:00'],
-            9 => ['14:00', '14:45'],
-            10 => ['14:45', '15:30'],
-        ];
+        $jam_pelajaran = $this->getJamPelajaran();
 
         foreach ($request->jam_ke as $i => $jam) {
 
@@ -121,18 +118,7 @@ class JadwalController extends Controller
 
     public function edit(Jadwal $jadwal)
     {
-        $defaultJam = [
-            1 => ['07:00', '07:45'],
-            2 => ['07:45', '08:30'],
-            3 => ['08:30', '09:15'],
-            4 => ['09:30', '10:15'],
-            5 => ['10:15', '11:00'],
-            6 => ['11:00', '11:45'],
-            7 => ['12:30', '13:15'],
-            8 => ['13:15', '14:00'],
-            9 => ['14:00', '14:45'],
-            10 => ['14:45', '15:30'],
-        ];
+        $defaultJam = $this->getJamPelajaran();
 
         $jadwals = Jadwal::where('kelas_id', $jadwal->kelas_id)
             ->where('hari', $jadwal->hari)
@@ -166,18 +152,7 @@ class JadwalController extends Controller
             'jam_selesai.*' => 'nullable|date_format:H:i',
         ]);
 
-        $jam_pelajaran = [
-            1 => ['07:00', '07:45'],
-            2 => ['07:45', '08:30'],
-            3 => ['08:30', '09:15'],
-            4 => ['09:30', '10:15'],
-            5 => ['10:15', '11:00'],
-            6 => ['11:00', '11:45'],
-            7 => ['12:30', '13:15'],
-            8 => ['13:15', '14:00'],
-            9 => ['14:00', '14:45'],
-            10 => ['14:45', '15:30'],
-        ];
+        $jam_pelajaran = $this->getJamPelajaran();
 
         foreach ($request->jam_ke as $i => $jam) {
 

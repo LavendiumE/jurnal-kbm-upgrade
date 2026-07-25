@@ -31,7 +31,8 @@ use App\Http\Controllers\InformasiController;
 use App\Http\Controllers\Admin\AdminJurnalController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\Admin\JurnalSettingController;
-
+use App\Http\Controllers\Admin\JamPelajaranController;
+use App\Http\Controllers\Admin\AdminJurnalPiketController;
 
 /*
 |--------------------------------------------------------------------------
@@ -322,6 +323,22 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/jurnal-settings', [JurnalSettingController::class, 'update'])
             ->name('admin.jurnal-settings.update');
+
+        Route::get('/jam-kbm', [JamPelajaranController::class, 'index'])
+            ->name('admin.jam-kbm.index');
+
+        Route::put('/jam-kbm', [JamPelajaranController::class, 'update'])
+            ->name('admin.jam-kbm.update');
+
+        Route::get(
+            '/jurnal-piket',
+            [AdminJurnalPiketController::class, 'index']
+        )->name('admin.jurnal-piket.index');
+
+        Route::get(
+            '/jurnal-piket/export',
+            [AdminJurnalPiketController::class, 'export']
+        )->name('admin.jurnal-piket.export');
     });
 
 

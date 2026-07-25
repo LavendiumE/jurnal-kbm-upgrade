@@ -169,6 +169,32 @@
                 </a>
             </li>
 
+            {{-- JURNAL GURU PIKET --}}
+            <li>
+                <a href="{{ route('admin.jurnal-piket.index') }}"
+                class="flex items-center px-3 py-2 rounded-lg
+                {{ request()->routeIs('admin.jurnal-piket.*')
+                ? 'bg-gray-100 text-blue-600'
+                : 'hover:bg-gray-100 text-gray-700' }}">
+
+                <svg xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke-width="1.5"
+                    stroke="currentColor"
+                    class="w-5 h-5 mr-3">
+
+                    <path stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+
+                </svg>
+
+                <span>Jurnal Guru Piket</span>
+
+                </a>
+            </li>
+
             {{-- MASTER DATA --}}
             <li class="pt-4">
                 <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
@@ -337,6 +363,31 @@
                     </svg>
 
                     <span>Pengaturan Jurnal</span>
+
+                </a>
+            </li>
+            {{-- JAM KBM --}}
+            <li>
+                <a href="{{ route('admin.jam-kbm.index') }}"
+                class="flex items-center px-3 py-2 rounded-lg
+                {{ request()->routeIs('admin.jam-kbm.*')
+                        ? 'bg-gray-100 text-blue-600'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="w-5 h-5 mr-3">
+
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 6v6l4 2m6-2a10 10 0 1 1-20 0 10 10 0 0 1 20 0Z" />
+
+                    </svg>
+
+                    <span>Jam KBM</span>
 
                 </a>
             </li>
