@@ -339,6 +339,9 @@ Route::middleware(['auth'])->group(function () {
             '/jurnal-piket/export',
             [AdminJurnalPiketController::class, 'export']
         )->name('admin.jurnal-piket.export');
+
+        Route::get('/jadwals/jam-kbm/{hari}', [JadwalController::class, 'getJamByHari'])
+            ->name('admin.jadwals.jam-kbm');
     });
 
 

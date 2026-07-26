@@ -30,16 +30,16 @@
                     <div>
                         <label class="block text-sm font-medium mb-2">Hari</label>
 
-                        <select name="hari"
-                                class="w-full border rounded px-3 py-2"
-                                required>
+                        <select id="hari"
+                            name="hari"
+                            class="w-full border rounded px-3 py-2"
+                            required>
                             <option value="">-- Pilih Hari --</option>
-                            <option value="senin">Senin</option>
-                            <option value="selasa">Selasa</option>
-                            <option value="rabu">Rabu</option>
-                            <option value="kamis">Kamis</option>
-                            <option value="jumat">Jumat</option>
-                            <option value="sabtu">Sabtu</option>
+                            <option value="Senin">Senin</option>
+                            <option value="Selasa">Selasa</option>
+                            <option value="Rabu">Rabu</option>
+                            <option value="Kamis">Kamis</option>
+                            <option value="Jumat">Jumat</option>
                         </select>
                     </div>
 
@@ -103,9 +103,15 @@
                                     <div class="preview-jam text-center">
 
                                         <div class="text-blue-600 font-semibold">
-                                            <span class="preview-mulai">{{ $defaultJam[$i][0] }}</span>
+                                            <span class="preview-mulai">
+                                                {{ $defaultJam[$i][0] ?? '-' }}
+                                            </span>
+
                                             -
-                                            <span class="preview-selesai">{{ $defaultJam[$i][1] }}</span>
+
+                                            <span class="preview-selesai">
+                                                {{ $defaultJam[$i][1] ?? '-' }}
+                                            </span>
                                         </div>
 
                                     </div>
@@ -136,7 +142,7 @@
                                             <input
                                                 type="time"
                                                 name="jam_mulai[]"
-                                                value="{{ $defaultJam[$i][0] }}"
+                                                value="{{ $defaultJam[$i][0] ?? '' }}"
                                                 class="jam-mulai w-full border rounded px-2 py-1">
 
                                         </div>
@@ -369,6 +375,39 @@
             td.querySelector('.preview-selesai').textContent = selesai;
 
         });
+
+    });
+
+    document.getElementById('hari').addEventListener('change', function () {
+
+        const hari = this.value;
+
+        if (!hari) return;
+
+        fetch(`/admin/jadwals/jam-kbm/${hari}`)
+            .then(response => response.json())
+            .then(data => {
+
+                document.querySelectorAll('tbody tr').forEach(function (row, index) {
+
+                    const jamKe = index + 1;
+
+                    if (!data[jamKe]) return;
+
+                    const mulai = data[jamKe][0];
+                    const selesai = data[jamKe][1];
+
+                    // Preview
+                    row.querySelector('.preview-mulai').textContent = mulai;
+                    row.querySelector('.preview-selesai').textContent = selesai;
+
+                    // Input
+                    row.querySelector('.jam-mulai').value = mulai;
+                    row.querySelector('.jam-selesai').value = selesai;
+
+                });
+
+            });
 
     });
 

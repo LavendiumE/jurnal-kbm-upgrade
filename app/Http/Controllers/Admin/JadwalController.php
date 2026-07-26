@@ -12,26 +12,34 @@ use App\Models\Mapel;
 use App\Models\Ruangan;
 use App\Exports\JadwalExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\JamKbm;
 
 class JadwalController extends Controller
 {
 
-    private function getJamPelajaran()
+    private function getJamPelajaran($hari)
     {
-        $setting = \App\Models\Setting::first();
+        $hari = ucfirst(strtolower($hari));
 
-        return [
-            1  => [$setting->jam1_mulai,  $setting->jam1_selesai],
-            2  => [$setting->jam2_mulai,  $setting->jam2_selesai],
-            3  => [$setting->jam3_mulai,  $setting->jam3_selesai],
-            4  => [$setting->jam4_mulai,  $setting->jam4_selesai],
-            5  => [$setting->jam5_mulai,  $setting->jam5_selesai],
-            6  => [$setting->jam6_mulai,  $setting->jam6_selesai],
-            7  => [$setting->jam7_mulai,  $setting->jam7_selesai],
-            8  => [$setting->jam8_mulai,  $setting->jam8_selesai],
-            9  => [$setting->jam9_mulai,  $setting->jam9_selesai],
-            10 => [$setting->jam10_mulai, $setting->jam10_selesai],
-        ];
+        return JamKbm::where('hari', $hari)
+            ->orderBy('jam_ke')
+            ->get()
+            ->mapWithKeys(function ($jam) {
+                return [
+                    $jam->jam_ke => [
+                        $jam->jam_mulai,
+                        $jam->jam_selesai
+                    ]
+                ];
+            })
+            ->toArray();
+    }
+
+    public function getJamByHari($hari)
+    {
+        return response()->json(
+            $this->getJamPelajaran($hari)
+        );
     }
 
     public function index()
@@ -40,14 +48,12 @@ class JadwalController extends Controller
             ->latest()
             ->paginate(10);
 
-        $setting = \App\Models\Setting::first();
-
-        return view('admin.jadwals.index', compact('jadwals', 'setting'));
+        return view('admin.jadwals.index', compact('jadwals'));
     }
 
     public function create()
     {
-        $defaultJam = $this->getJamPelajaran();
+        $defaultJam = $this->getJamPelajaran('Senin');
 
         return view('admin.jadwals.create', [
             'gurus' => Guru::whereHas('user', function ($query) {
@@ -57,7 +63,6 @@ class JadwalController extends Controller
             'kelas' => Kelas::all(),
             'mapels' => Mapel::all(),
             'ruangans' => Ruangan::all(),
-            'setting' => \App\Models\Setting::first(),
             'defaultJam' => $defaultJam,
         ]);
     }
@@ -65,7 +70,7 @@ class JadwalController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'hari' => 'required',
+            'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat',
             'kelas_id' => 'required|exists:kelas,id',
 
             'jam_mulai.*' => 'nullable|date_format:H:i',
@@ -75,7 +80,7 @@ class JadwalController extends Controller
             'batas_jurnal_menit.*' => 'nullable|integer|min:1',
         ]);
 
-        $jam_pelajaran = $this->getJamPelajaran();
+        $jam_pelajaran = $this->getJamPelajaran($request->hari);
 
         foreach ($request->jam_ke as $i => $jam) {
 
@@ -88,7 +93,7 @@ class JadwalController extends Controller
             }
 
             Jadwal::create([
-                'hari' => $request->hari,
+                'hari' => strtolower($request->hari),
                 'kelas_id' => $request->kelas_id,
                 'mapel_id' => $request->mapel_id[$i],
                 'guru_id' => $request->guru_id[$i],
@@ -96,11 +101,11 @@ class JadwalController extends Controller
                 'jam_ke' => $jam,
                 'jam_mulai' => !empty($request->jam_mulai[$i])
                     ? $request->jam_mulai[$i]
-                    : $jam_pelajaran[$jam][0],
+                    : ($jam_pelajaran[$jam][0] ?? null),
 
                 'jam_selesai' => !empty($request->jam_selesai[$i])
                     ? $request->jam_selesai[$i]
-                    : $jam_pelajaran[$jam][1],
+                    : ($jam_pelajaran[$jam][1] ?? null),
                 // ===== BATAS JURNAL =====
                 'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
 
@@ -118,7 +123,7 @@ class JadwalController extends Controller
 
     public function edit(Jadwal $jadwal)
     {
-        $defaultJam = $this->getJamPelajaran();
+        $defaultJam = $this->getJamPelajaran($jadwal->hari);
 
         $jadwals = Jadwal::where('kelas_id', $jadwal->kelas_id)
             ->where('hari', $jadwal->hari)
@@ -136,7 +141,6 @@ class JadwalController extends Controller
                 $query->where('is_active', true);
             })->orderBy('nama')->get(),
             'ruangans' => Ruangan::all(),
-            'setting' => \App\Models\Setting::first(),
             'defaultJam' => $defaultJam,
         ]);
     }
@@ -146,13 +150,15 @@ class JadwalController extends Controller
         [$kelas_id, $hari] = explode('-', $group);
 
         $request->validate([
+            'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat',
+
             'use_default_batas_jurnal.*' => 'required|boolean',
             'batas_jurnal_menit.*' => 'nullable|integer|min:1',
             'jam_mulai.*' => 'nullable|date_format:H:i',
             'jam_selesai.*' => 'nullable|date_format:H:i',
         ]);
 
-        $jam_pelajaran = $this->getJamPelajaran();
+        $jam_pelajaran = $this->getJamPelajaran($request->hari);
 
         foreach ($request->jam_ke as $i => $jam) {
 
@@ -177,7 +183,7 @@ class JadwalController extends Controller
                 ->first();
 
             $data = [
-                'hari' => $request->hari,
+                'hari' => strtolower($request->hari),
                 'kelas_id' => $kelas_id,
                 'mapel_id' => $request->mapel_id[$i],
                 'guru_id' => $request->guru_id[$i],
@@ -186,11 +192,11 @@ class JadwalController extends Controller
 
                 'jam_mulai' => !empty($request->jam_mulai[$i])
                     ? $request->jam_mulai[$i]
-                    : $jam_pelajaran[$jam][0],
+                    : ($jam_pelajaran[$jam][0] ?? null),
 
                 'jam_selesai' => !empty($request->jam_selesai[$i])
                     ? $request->jam_selesai[$i]
-                    : $jam_pelajaran[$jam][1],
+                    : ($jam_pelajaran[$jam][1] ?? null),
 
                 'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
 

@@ -24,12 +24,32 @@
                     {{-- HARI --}}
                     <div>
                         <label class="block text-sm font-medium mb-2">Hari</label>
-                        <input type="text"
-                               value="{{ ucfirst($jadwalGroup['hari']) }}"
-                               class="w-full border rounded px-3 py-2 bg-gray-100"
-                               readonly>
+                        <select
+                            id="hari"
+                            name="hari"
+                            class="w-full border rounded px-3 py-2">
 
-                        <input type="hidden" name="hari" value="{{ $jadwalGroup['hari'] }}">
+                            <option value="Senin" {{ $jadwalGroup['hari']=='senin' ? 'selected' : '' }}>
+                                Senin
+                            </option>
+
+                            <option value="Selasa" {{ $jadwalGroup['hari']=='selasa' ? 'selected' : '' }}>
+                                Selasa
+                            </option>
+
+                            <option value="Rabu" {{ $jadwalGroup['hari']=='rabu' ? 'selected' : '' }}>
+                                Rabu
+                            </option>
+
+                            <option value="Kamis" {{ $jadwalGroup['hari']=='kamis' ? 'selected' : '' }}>
+                                Kamis
+                            </option>
+
+                            <option value="Jumat" {{ $jadwalGroup['hari']=='jumat' ? 'selected' : '' }}>
+                                Jumat
+                            </option>
+
+                        </select>
                     </div>
 
                     {{-- KELAS --}}
@@ -369,6 +389,37 @@
             td.querySelector('.preview-selesai').textContent = selesai;
 
         });
+
+    });
+
+    document.getElementById('hari').addEventListener('change', function () {
+
+        const hari = this.value;
+
+        if (!hari) return;
+
+        fetch(`/admin/jadwals/jam-kbm/${hari}`)
+            .then(response => response.json())
+            .then(data => {
+
+                document.querySelectorAll('tbody tr').forEach(function (row, index) {
+
+                    const jamKe = index + 1;
+
+                    if (!data[jamKe]) return;
+
+                    const mulai = data[jamKe][0];
+                    const selesai = data[jamKe][1];
+
+                    row.querySelector('.preview-mulai').textContent = mulai;
+                    row.querySelector('.preview-selesai').textContent = selesai;
+
+                    row.querySelector('.jam-mulai').value = mulai;
+                    row.querySelector('.jam-selesai').value = selesai;
+
+                });
+
+            });
 
     });
 

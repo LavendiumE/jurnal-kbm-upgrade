@@ -4,70 +4,67 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\Setting;
+use App\Models\JamKbm;
 
 class JamPelajaranController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $setting = Setting::first();
+        $hari = $request->get('hari', 'Senin');
 
-        return view('admin.settings.jam-kbm', compact('setting'));
+        $jamPelajaran = JamKbm::where('hari', $hari)
+            ->orderBy('jam_ke')
+            ->get();
+
+        $hariList = [
+            'Senin',
+            'Selasa',
+            'Rabu',
+            'Kamis',
+            'Jumat'
+        ];
+
+        return view(
+            'admin.settings.jam-kbm',
+            compact(
+                'jamPelajaran',
+                'hari',
+                'hariList'
+            )
+        );
     }
 
     public function update(Request $request)
     {
         $request->validate([
-
-            'jam1_mulai' => 'required',
-            'jam1_selesai' => 'required',
-
-            'jam2_mulai' => 'required',
-            'jam2_selesai' => 'required',
-
-            'jam3_mulai' => 'required',
-            'jam3_selesai' => 'required',
-
-            'jam4_mulai' => 'required',
-            'jam4_selesai' => 'required',
-
-            'jam5_mulai' => 'required',
-            'jam5_selesai' => 'required',
-
-            'jam6_mulai' => 'required',
-            'jam6_selesai' => 'required',
-
-            'jam7_mulai' => 'required',
-            'jam7_selesai' => 'required',
-
-            'jam8_mulai' => 'required',
-            'jam8_selesai' => 'required',
-
-            'jam9_mulai' => 'required',
-            'jam9_selesai' => 'required',
-
-            'jam10_mulai' => 'required',
-            'jam10_selesai' => 'required',
-
+            'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat',
+            'jam_ke.*' => 'required|integer',
+            'jam_mulai.*' => 'required',
+            'jam_selesai.*' => 'required',
         ]);
 
-        $setting = Setting::first();
+        foreach ($request->jam_ke as $index => $jamKe) {
 
-        $setting->update($request->only([
-            'jam1_mulai','jam1_selesai',
-            'jam2_mulai','jam2_selesai',
-            'jam3_mulai','jam3_selesai',
-            'jam4_mulai','jam4_selesai',
-            'jam5_mulai','jam5_selesai',
-            'jam6_mulai','jam6_selesai',
-            'jam7_mulai','jam7_selesai',
-            'jam8_mulai','jam8_selesai',
-            'jam9_mulai','jam9_selesai',
-            'jam10_mulai','jam10_selesai',
-        ]));
+            JamKbm::where('hari', $request->hari)
+                ->where('jam_ke', $jamKe)
+                ->update([
+
+                    'jam_mulai' => $request->jam_mulai[$index],
+
+                    'jam_selesai' => $request->jam_selesai[$index],
+
+                ]);
+
+        }
 
         return redirect()
-            ->route('admin.jam-kbm.index')
-            ->with('success', 'Jam KBM berhasil diperbarui.');
+            ->route(
+                'admin.jam-kbm.index',
+                ['hari' => $request->hari]
+            )
+            ->with(
+                'success',
+                'Jam KBM berhasil diperbarui.'
+            );
     }
 }
