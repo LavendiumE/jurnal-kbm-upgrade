@@ -10,11 +10,11 @@ class JamKbmSeeder extends Seeder
     public function run(): void
     {
         $hari = [
-            'senin',
-            'selasa',
-            'rabu',
-            'kamis',
-            'jumat'
+            'Senin',
+            'Selasa',
+            'Rabu',
+            'Kamis',
+            'Jumat'
         ];
 
         foreach ($hari as $h) {

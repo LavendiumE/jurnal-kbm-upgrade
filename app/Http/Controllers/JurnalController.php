@@ -54,7 +54,7 @@ class JurnalController extends Controller
 
         $setting = Setting::first();
 
-        $defaultMenit = $setting->batas_jurnal_menit ?? 30;
+       $defaultMenit = $setting->toleransi_jurnal ?? 30;
 
         // Konversi hari Carbon -> format database
         $hariMap = [
@@ -136,7 +136,7 @@ class JurnalController extends Controller
         // =========================
         $setting = Setting::first();
 
-        $defaultMenit = $setting->batas_jurnal_menit ?? 30;
+       $defaultMenit = $setting->toleransi_jurnal ?? 30;
 
         $menit = $jadwal->use_default_batas_jurnal
             ? $defaultMenit

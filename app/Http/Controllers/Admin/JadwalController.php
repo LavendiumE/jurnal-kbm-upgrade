@@ -13,6 +13,7 @@ use App\Models\Ruangan;
 use App\Exports\JadwalExport;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Models\JamKbm;
+use App\Models\Setting;
 
 class JadwalController extends Controller
 {
@@ -48,12 +49,18 @@ class JadwalController extends Controller
             ->latest()
             ->paginate(10);
 
-        return view('admin.jadwals.index', compact('jadwals'));
+        $setting = Setting::first();
+
+        return view('admin.jadwals.index', compact(
+            'jadwals',
+            'setting'
+        ));
     }
 
     public function create()
     {
         $defaultJam = $this->getJamPelajaran('Senin');
+        $setting = Setting::first();
 
         return view('admin.jadwals.create', [
             'gurus' => Guru::whereHas('user', function ($query) {
@@ -64,6 +71,7 @@ class JadwalController extends Controller
             'mapels' => Mapel::all(),
             'ruangans' => Ruangan::all(),
             'defaultJam' => $defaultJam,
+            'setting' => $setting,
         ]);
     }
 
@@ -109,7 +117,7 @@ class JadwalController extends Controller
                 // ===== BATAS JURNAL =====
                 'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
 
-                'toleransi_jurnal' =>
+                'batas_jurnal_menit' =>
                     $request->use_default_batas_jurnal[$i]
                         ? null
                         : ($request->batas_jurnal_menit[$i] ?: null),
@@ -124,6 +132,7 @@ class JadwalController extends Controller
     public function edit(Jadwal $jadwal)
     {
         $defaultJam = $this->getJamPelajaran($jadwal->hari);
+        $setting = Setting::first();
 
         $jadwals = Jadwal::where('kelas_id', $jadwal->kelas_id)
             ->where('hari', $jadwal->hari)
@@ -142,6 +151,7 @@ class JadwalController extends Controller
             })->orderBy('nama')->get(),
             'ruangans' => Ruangan::all(),
             'defaultJam' => $defaultJam,
+            'setting' => $setting,
         ]);
     }
 
