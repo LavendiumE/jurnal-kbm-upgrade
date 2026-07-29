@@ -88,7 +88,9 @@ class JadwalController extends Controller
             'use_default_batas_jurnal.*' => 'required|boolean',
             'batas_jurnal_menit.*' => 'nullable|integer|min:1',
         ]);
+
         Log::info('VALIDASI LOLOS');
+
         Log::info('STORE JADWAL', [
             'request' => $request->all(),
         ]);
@@ -106,6 +108,7 @@ class JadwalController extends Controller
             }
 
             try {
+
                 Log::info('AKAN CREATE', [
                     'jam_ke' => $jam,
                     'kelas_id' => $request->kelas_id,
@@ -115,7 +118,26 @@ class JadwalController extends Controller
                 ]);
 
                 $jadwal = Jadwal::create([
-                    ...
+                    'hari' => strtolower($request->hari),
+                    'kelas_id' => $request->kelas_id,
+                    'mapel_id' => $request->mapel_id[$i],
+                    'guru_id' => $request->guru_id[$i],
+                    'ruangan_id' => $request->ruangan_id[$i],
+                    'jam_ke' => $jam,
+
+                    'jam_mulai' => !empty($request->jam_mulai[$i])
+                        ? $request->jam_mulai[$i]
+                        : ($jam_pelajaran[$jam][0] ?? null),
+
+                    'jam_selesai' => !empty($request->jam_selesai[$i])
+                        ? $request->jam_selesai[$i]
+                        : ($jam_pelajaran[$jam][1] ?? null),
+
+                    'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
+
+                    'batas_jurnal_menit' => $request->use_default_batas_jurnal[$i]
+                        ? null
+                        : ($request->batas_jurnal_menit[$i] ?: null),
                 ]);
 
                 Log::info('CREATE BERHASIL', [
@@ -132,7 +154,6 @@ class JadwalController extends Controller
 
                 throw $e;
             }
-            
         }
 
         return redirect()
