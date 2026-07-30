@@ -78,6 +78,8 @@ class JadwalController extends Controller
 
     public function store(Request $request)
     {
+        dd($request->all());
+
         $request->validate([
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat',
             'kelas_id' => 'required|exists:kelas,id',
@@ -87,12 +89,6 @@ class JadwalController extends Controller
 
             'use_default_batas_jurnal.*' => 'required|boolean',
             'batas_jurnal_menit.*' => 'nullable|integer|min:1',
-        ]);
-
-        Log::info('VALIDASI LOLOS');
-
-        Log::info('STORE JADWAL', [
-            'request' => $request->all(),
         ]);
 
         $jam_pelajaran = $this->getJamPelajaran($request->hari);
@@ -107,53 +103,28 @@ class JadwalController extends Controller
                 continue;
             }
 
-            try {
+            Jadwal::create([
+                'hari' => strtolower($request->hari),
+                'kelas_id' => $request->kelas_id,
+                'mapel_id' => $request->mapel_id[$i],
+                'guru_id' => $request->guru_id[$i],
+                'ruangan_id' => $request->ruangan_id[$i],
+                'jam_ke' => $jam,
 
-                Log::info('AKAN CREATE', [
-                    'jam_ke' => $jam,
-                    'kelas_id' => $request->kelas_id,
-                    'guru_id' => $request->guru_id[$i],
-                    'mapel_id' => $request->mapel_id[$i],
-                    'ruangan_id' => $request->ruangan_id[$i],
-                ]);
+                'jam_mulai' => !empty($request->jam_mulai[$i])
+                    ? $request->jam_mulai[$i]
+                    : ($jam_pelajaran[$jam][0] ?? null),
 
-                $jadwal = Jadwal::create([
-                    'hari' => strtolower($request->hari),
-                    'kelas_id' => $request->kelas_id,
-                    'mapel_id' => $request->mapel_id[$i],
-                    'guru_id' => $request->guru_id[$i],
-                    'ruangan_id' => $request->ruangan_id[$i],
-                    'jam_ke' => $jam,
+                'jam_selesai' => !empty($request->jam_selesai[$i])
+                    ? $request->jam_selesai[$i]
+                    : ($jam_pelajaran[$jam][1] ?? null),
 
-                    'jam_mulai' => !empty($request->jam_mulai[$i])
-                        ? $request->jam_mulai[$i]
-                        : ($jam_pelajaran[$jam][0] ?? null),
+                'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
 
-                    'jam_selesai' => !empty($request->jam_selesai[$i])
-                        ? $request->jam_selesai[$i]
-                        : ($jam_pelajaran[$jam][1] ?? null),
-
-                    'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
-
-                    'batas_jurnal_menit' => $request->use_default_batas_jurnal[$i]
-                        ? null
-                        : ($request->batas_jurnal_menit[$i] ?: null),
-                ]);
-
-                Log::info('CREATE BERHASIL', [
-                    'id' => $jadwal->id,
-                    'jam_ke' => $jam,
-                ]);
-
-            } catch (\Throwable $e) {
-
-                Log::error('CREATE GAGAL', [
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                ]);
-
-                throw $e;
-            }
+                'batas_jurnal_menit' => $request->use_default_batas_jurnal[$i]
+                    ? null
+                    : ($request->batas_jurnal_menit[$i] ?: null),
+            ]);
         }
 
         return redirect()
