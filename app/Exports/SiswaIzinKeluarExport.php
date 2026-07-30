@@ -14,15 +14,36 @@ class SiswaIzinKeluarExport implements
     WithMapping,
     ShouldAutoSize
 {
+    protected $tanggalAwal;
+    protected $tanggalAkhir;
+
+    public function __construct($tanggalAwal = null, $tanggalAkhir = null)
+    {
+        $this->tanggalAwal = $tanggalAwal;
+        $this->tanggalAkhir = $tanggalAkhir;
+    }
+
     public function collection()
     {
-        return SiswaIzinKeluar::latest()->get();
+        $query = SiswaIzinKeluar::latest();
+
+        if ($this->tanggalAwal && $this->tanggalAkhir) {
+
+           $query->whereBetween('tanggal', [
+                $this->tanggalAwal,
+                $this->tanggalAkhir,
+            ]);
+
+        }
+
+        return $query->get();
     }
 
     public function headings(): array
     {
         return [
             'No',
+            'Tanggal',
             'Nama',
             'NIS',
             'Kelas',
@@ -30,7 +51,7 @@ class SiswaIzinKeluarExport implements
             'Jam Keluar',
             'Jam Kembali',
             'Paraf Guru',
-            'Tanggal'
+            'Tanggal',
         ];
     }
 
@@ -41,6 +62,7 @@ class SiswaIzinKeluarExport implements
 
         return [
             $no,
+            $row->tanggal,
             $row->nama,
             $row->nis,
             $row->kelas,
@@ -52,8 +74,8 @@ class SiswaIzinKeluarExport implements
                 ? asset('storage/' . $row->paraf_guru)
                 : '-',
 
-            $row->tanggal
-                ? \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y')
+            $row->created_at
+                ? $row->created_at->format('d-m-Y')
                 : '-',
         ];
     }

@@ -33,6 +33,7 @@ class SiswaIzinKeluarController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string',
             'nis' => 'required|string',
+            'tanggal' => 'required|date',
             'kelas_id' => 'required',
             'keperluan' => 'nullable|string',
             'jam_izin' => 'required',
@@ -135,6 +136,7 @@ class SiswaIzinKeluarController extends Controller
         $validated = $request->validate([
             'nama' => 'required|string',
             'nis' => 'required|string',
+            'tanggal' => 'required|date',
             'kelas_id' => 'required',
             'keperluan' => 'nullable|string',
             'jam_izin' => 'required',
@@ -158,12 +160,22 @@ class SiswaIzinKeluarController extends Controller
                 if ($mime === 'image/jpeg') {
                     $source = imagecreatefromjpeg($file->getPathname());
 
-                } elseif ($mime === 'image/png') {
-                    $source = imagecreatefrompng($file->getPathname());
+                    if (!$source) {
+                        throw new Exception('Gagal membaca file JPEG.');
+                    }                      
+
+                } elseif ($mime === 'image/png') {      
+                    $source = @imagecreatefrompng($file->getPathname());
+
+                    if (!$source) {
+                        throw new Exception('Gagal membaca file PNG.');
+                    }
 
                 } elseif ($mime === 'image/webp') {
                     $source = imagecreatefromwebp($file->getPathname());
-
+                    if (!$source) {
+                        throw new Exception('Gagal membaca file WEBP.');
+                    }
                 } else {
                     throw new Exception('Format gambar tidak didukung.');
                 }
@@ -239,10 +251,15 @@ class SiswaIzinKeluarController extends Controller
             ->with('success', 'Data berhasil dihapus');
     }
 
-    public function export()
+    public function export(Request $request)
     {
         return Excel::download(
-            new SiswaIzinKeluarExport,
+
+            new SiswaIzinKeluarExport(
+                $request->tanggal_awal,
+                $request->tanggal_akhir
+            ),
+
             'izin-keluar.xlsx'
         );
     }

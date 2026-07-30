@@ -10,6 +10,7 @@ class SiswaTerlambat extends Model
 
     protected $fillable = [
         'nama_siswa',
+        'tanggal',
         'nis',
         'kelas_id',
         'jam_terlambat',

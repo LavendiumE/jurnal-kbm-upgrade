@@ -39,6 +39,7 @@ class SiswaTerlambatController extends Controller
             'nama_siswa' => 'required|string',
             'nis' => 'required|string',
             'kelas_id' => 'required',
+            'tanggal' => 'required|date',
             'jam_terlambat' => 'required',
             'cuaca' => 'nullable|string',
             'alasan' => 'nullable|string',
@@ -115,7 +116,6 @@ class SiswaTerlambatController extends Controller
         }
 
         $validated['user_id'] = auth()->id();
-        $validated['tanggal'] = now()->toDateString();
 
         SiswaTerlambat::create($validated);
 
@@ -142,6 +142,7 @@ class SiswaTerlambatController extends Controller
             'nama_siswa' => 'required|string',
             'nis' => 'required|string',
             'kelas_id' => 'required',
+            'tanggal' => 'required|date',
             'jam_terlambat' => 'required',
             'cuaca' => 'nullable|string',
             'alasan' => 'nullable|string',
@@ -221,8 +222,6 @@ class SiswaTerlambatController extends Controller
             }
         }
 
-        $validated['tanggal'] = now()->toDateString();
-
         $data->update($validated);
 
         return redirect()->route('piket.perizinan.terlambat.index')
@@ -243,8 +242,14 @@ class SiswaTerlambatController extends Controller
             ->with('success', 'Data berhasil dihapus');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new SiswaTerlambatExport, 'siswa-terlambat.xlsx');
+        return Excel::download(
+            new SiswaTerlambatExport(
+                $request->tanggal_awal,
+                $request->tanggal_akhir
+            ),
+            'siswa-terlambat.xlsx'
+        );
     }
 }

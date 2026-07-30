@@ -8,6 +8,7 @@ class SiswaPulangAwal extends Model
 {
     protected $fillable = [
         'nama',
+        'tanggal',
         'nis',
         'kelas',
         'jam_izin',

@@ -14,15 +14,36 @@ class SiswaTerlambatExport implements
     WithMapping,
     ShouldAutoSize
 {
+    protected $tanggalAwal;
+    protected $tanggalAkhir;
+
+    public function __construct($tanggalAwal = null, $tanggalAkhir = null)
+    {
+        $this->tanggalAwal = $tanggalAwal;
+        $this->tanggalAkhir = $tanggalAkhir;
+    }
+
     public function collection()
     {
-        return SiswaTerlambat::with('kelas')->latest()->get();
+        return SiswaTerlambat::with('kelas')
+            ->when(
+                $this->tanggalAwal && $this->tanggalAkhir,
+                function ($query) {
+                    $query->whereBetween('tanggal', [
+                        $this->tanggalAwal,
+                        $this->tanggalAkhir
+                    ]);
+                }
+            )
+            ->latest()
+            ->get();
     }
 
     public function headings(): array
     {
         return [
             'No',
+            'Tanggal',
             'Nama Siswa',
             'NIS',
             'Kelas',
@@ -31,7 +52,6 @@ class SiswaTerlambatExport implements
             'Alasan',
             'Pembinaan',
             'Paraf Guru',
-            'Tanggal Dibuat'
         ];
     }
 
@@ -42,6 +62,11 @@ class SiswaTerlambatExport implements
 
         return [
             $no,
+
+            $row->tanggal
+                ? \Carbon\Carbon::parse($row->tanggal)->format('d-m-Y')
+                : '-',
+
             $row->nama_siswa,
             $row->nis,
             $row->kelas->nama ?? '-',
@@ -53,8 +78,6 @@ class SiswaTerlambatExport implements
             $row->paraf_guru
                 ? asset('storage/' . $row->paraf_guru)
                 : '-',
-
-            $row->created_at->format('d-m-Y H:i'),
         ];
     }
 }

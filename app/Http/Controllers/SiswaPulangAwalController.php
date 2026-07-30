@@ -32,6 +32,7 @@ class SiswaPulangAwalController extends Controller
             'nama' => 'required|string',
             'nis' => 'required|string',
             'kelas' => 'required|string',
+            'tanggal' => 'required|date',
             'keperluan' => 'required|string',
             'jam_izin' => 'required',
             'paraf_guru' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,mp4,mov,avi,mkv|max:20480',
@@ -106,8 +107,6 @@ class SiswaPulangAwalController extends Controller
 
         $validated['user_id'] = auth()->id();
 
-        $validated['tanggal'] = now()->toDateString();
-
         SiswaPulangAwal::create($validated);
 
         return redirect()->route('piket.perizinan.pulang.index')
@@ -130,12 +129,11 @@ class SiswaPulangAwalController extends Controller
             'nama' => 'required|string',
             'nis' => 'required|string',
             'kelas' => 'required|string',
+            'tanggal' => 'required|date',
             'keperluan' => 'required|string',
             'jam_izin' => 'required',
             'paraf_guru' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf,mp4,mov,avi,mkv|max:20480',
         ]);
-
-        $validated['tanggal'] = now()->toDateString();
 
         if ($request->hasFile('paraf_guru')) {
 
@@ -225,8 +223,14 @@ class SiswaPulangAwalController extends Controller
             ->with('success', 'Data berhasil dihapus');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new SiswaPulangAwalExport, 'izin-pulang-awal.xlsx');
+        return Excel::download(
+            new SiswaPulangAwalExport(
+                $request->tanggal_awal,
+                $request->tanggal_akhir
+            ),
+            'izin-pulang-awal.xlsx'
+        );
     }
 }

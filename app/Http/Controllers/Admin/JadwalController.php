@@ -166,8 +166,8 @@ class JadwalController extends Controller
 
             'use_default_batas_jurnal.*' => 'required|boolean',
             'batas_jurnal_menit.*' => 'nullable|integer|min:1',
-            'jam_mulai.*' => 'nullable|date_format:H:i',
-            'jam_selesai.*' => 'nullable|date_format:H:i',
+            'jam_mulai.*' => 'nullable|date_format:H:i:s',
+            'jam_selesai.*' => 'nullable|date_format:H:i:s', 
         ]);
 
         $jam_pelajaran = $this->getJamPelajaran($request->hari);
