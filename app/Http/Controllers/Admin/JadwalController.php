@@ -78,7 +78,13 @@ class JadwalController extends Controller
 
     public function store(Request $request)
     {
-        dd($request->all());
+        dd([
+            'kelas_id'   => $request->kelas_id,
+            'jam_ke'     => array_values($request->jam_ke),
+            'mapel_id'   => array_values($request->mapel_id),
+            'guru_id'    => array_values($request->guru_id),
+            'ruangan_id' => array_values($request->ruangan_id),
+        ]);
 
         $request->validate([
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat',
