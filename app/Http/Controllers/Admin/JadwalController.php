@@ -78,13 +78,6 @@ class JadwalController extends Controller
 
     public function store(Request $request)
     {
-        dd([
-            'kelas_id'   => $request->kelas_id,
-            'jam_ke'     => array_values($request->jam_ke),
-            'mapel_id'   => array_values($request->mapel_id),
-            'guru_id'    => array_values($request->guru_id),
-            'ruangan_id' => array_values($request->ruangan_id),
-        ]);
 
         $request->validate([
             'hari' => 'required|in:Senin,Selasa,Rabu,Kamis,Jumat',
@@ -109,28 +102,46 @@ class JadwalController extends Controller
                 continue;
             }
 
-            Jadwal::create([
-                'hari' => strtolower($request->hari),
-                'kelas_id' => $request->kelas_id,
-                'mapel_id' => $request->mapel_id[$i],
-                'guru_id' => $request->guru_id[$i],
-                'ruangan_id' => $request->ruangan_id[$i],
-                'jam_ke' => $jam,
+            try {
 
-                'jam_mulai' => !empty($request->jam_mulai[$i])
-                    ? $request->jam_mulai[$i]
-                    : ($jam_pelajaran[$jam][0] ?? null),
+                $jadwal = Jadwal::create([
+                    'hari' => strtolower($request->hari),
+                    'kelas_id' => $request->kelas_id,
+                    'mapel_id' => $request->mapel_id[$i],
+                    'guru_id' => $request->guru_id[$i],
+                    'ruangan_id' => $request->ruangan_id[$i],
+                    'jam_ke' => $jam,
 
-                'jam_selesai' => !empty($request->jam_selesai[$i])
-                    ? $request->jam_selesai[$i]
-                    : ($jam_pelajaran[$jam][1] ?? null),
+                    'jam_mulai' => !empty($request->jam_mulai[$i])
+                        ? $request->jam_mulai[$i]
+                        : ($jam_pelajaran[$jam][0] ?? null),
 
-                'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
+                    'jam_selesai' => !empty($request->jam_selesai[$i])
+                        ? $request->jam_selesai[$i]
+                        : ($jam_pelajaran[$jam][1] ?? null),
 
-                'batas_jurnal_menit' => $request->use_default_batas_jurnal[$i]
-                    ? null
-                    : ($request->batas_jurnal_menit[$i] ?: null),
-            ]);
+                    'use_default_batas_jurnal' => $request->use_default_batas_jurnal[$i],
+
+                    'batas_jurnal_menit' => $request->use_default_batas_jurnal[$i]
+                        ? null
+                        : ($request->batas_jurnal_menit[$i] ?: null),
+                ]);
+
+                dd([
+                    'status' => 'BERHASIL',
+                    'jadwal' => $jadwal,
+                ]);
+
+            } catch (\Throwable $e) {
+
+                dd([
+                    'status' => 'GAGAL',
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+
+            }
         }
 
         return redirect()
