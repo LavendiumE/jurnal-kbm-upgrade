@@ -104,19 +104,26 @@ class JadwalController extends Controller
                 }
 
                 Jadwal::create([
-                    // isi sama persis
+                    // PASTE ISI JADWAL::CREATE() ASLIMU DI SINI
                 ]);
             }
 
             dd('SAMPAI RETURN');
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            dd([
+                'request' => $request->all(),
+                'errors'  => $e->errors(),
+            ]);
+
         } catch (\Throwable $e) {
 
             dd([
-                'class' => get_class($e),
+                'class'   => get_class($e),
                 'message' => $e->getMessage(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
+                'file'    => $e->getFile(),
+                'line'    => $e->getLine(),
             ]);
 
         }
