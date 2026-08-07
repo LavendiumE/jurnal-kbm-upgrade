@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 
+
 class JurnalPiketController extends Controller
 {
     public function index()
@@ -252,8 +253,16 @@ class JurnalPiketController extends Controller
             ->with('success', 'Jurnal berhasil dihapus');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new JurnalPiketExport, 'jurnal-guru-piket.xlsx');
+        return Excel::download(
+
+            new JurnalPiketExport(
+                $request->tanggal_awal,
+                $request->tanggal_akhir
+            ),
+
+            'jurnal-guru-piket.xlsx'
+        );
     }
 }

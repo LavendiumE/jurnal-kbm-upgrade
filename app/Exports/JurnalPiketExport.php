@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Jurnal;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -14,12 +15,41 @@ class JurnalPiketExport implements
     WithMapping,
     ShouldAutoSize
 {
-    public function collection()
+    protected $tanggalAwal;
+    protected $tanggalAkhir;
+
+    public function __construct(
+        $tanggalAwal = null,
+        $tanggalAkhir = null
+    ) {
+        $this->tanggalAwal = $tanggalAwal;
+        $this->tanggalAkhir = $tanggalAkhir;
+    }
+
+    public function collection(): Collection
     {
-        return Jurnal::with(['guru', 'kelas', 'jadwal.mapel', 'jadwal.ruangan'])
-            ->where('tipe', 'piket')
-            ->latest()
-            ->get();
+        $query = Jurnal::with([
+            'guru',
+            'kelas',
+            'jadwal.mapel',
+            'jadwal.ruangan'
+        ])
+        ->where('tipe', 'piket')
+        ->latest();
+
+        if ($this->tanggalAwal && $this->tanggalAkhir) {
+
+            $query->whereBetween(
+                'created_at',
+                [
+                    $this->tanggalAwal . ' 00:00:00',
+                    $this->tanggalAkhir . ' 23:59:59',
+                ]
+            );
+
+        }
+
+        return $query->get();
     }
 
     public function headings(): array
@@ -32,7 +62,7 @@ class JurnalPiketExport implements
             'Kelas',
             'Mapel',
             'Guru',
-            'Ruangan'
+            'Ruangan',
         ];
     }
 
@@ -43,7 +73,7 @@ class JurnalPiketExport implements
 
         return [
             $no,
-            $row->created_at->format('d-m-Y'),
+            optional($row->created_at)->format('d-m-Y'),
             ucfirst($row->jadwal->hari ?? '-'),
             ($row->jadwal->jam_mulai ?? '-') . ' - ' . ($row->jadwal->jam_selesai ?? '-'),
             $row->kelas->nama ?? '-',

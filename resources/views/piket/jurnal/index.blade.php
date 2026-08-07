@@ -18,10 +18,102 @@
                 + Add Jurnal
             </a>
 
-            <a href="{{ route('piket.jurnal.export') }}"
-            class="px-4 py-2 border border-green-500 text-green-600 rounded hover:bg-green-50 transition">
+            <button
+                data-modal-target="exportModal"
+                data-modal-toggle="exportModal"
+                class="px-4 py-2 border border-green-500 text-green-600 rounded hover:bg-green-50 transition">
+
                 Export
-            </a>
+
+            </button>
+
+            {{-- MODAL EXPORT --}}
+            <div id="exportModal"
+                tabindex="-1"
+                aria-hidden="true"
+                class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
+                <div class="bg-white rounded-xl shadow-lg w-full max-w-md">
+
+                    {{-- HEADER --}}
+                    <div class="flex items-center justify-between p-4 border-b">
+
+                        <h3 class="text-lg font-semibold">
+                            Export Jurnal Guru Piket
+                        </h3>
+
+                        <button
+                            type="button"
+                            data-modal-hide="exportModal"
+                            class="text-gray-400 hover:text-gray-600">
+
+                            ✕
+
+                        </button>
+
+                    </div>
+
+                    {{-- BODY --}}
+                    <form
+                        method="GET"
+                        action="{{ route('piket.jurnal.export') }}">
+
+                        <div class="p-5 space-y-4">
+
+                            <div>
+
+                                <label class="block text-sm mb-1">
+                                    Tanggal Awal
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="tanggal_awal"
+                                    class="w-full border rounded-lg p-2">
+
+                            </div>
+
+                            <div>
+
+                                <label class="block text-sm mb-1">
+                                    Tanggal Akhir
+                                </label>
+
+                                <input
+                                    type="date"
+                                    name="tanggal_akhir"
+                                    class="w-full border rounded-lg p-2">
+
+                            </div>
+
+                        </div>
+
+                        <div class="flex justify-end gap-2 p-4 border-t">
+
+                            <button
+                                type="button"
+                                data-modal-hide="exportModal"
+                                class="px-4 py-2 border rounded-lg">
+
+                                Batal
+
+                            </button>
+
+                            <button
+                                type="submit"
+                                class="px-4 py-2 bg-green-600 text-white rounded-lg">
+
+                                Download
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
 
 
         </div>
