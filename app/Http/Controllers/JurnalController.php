@@ -44,6 +44,29 @@ class JurnalController extends Controller
         return view('guru.jurnals.index', compact('jurnals', 'informasi'));
     }
 
+    public function indexKurikulum()
+    {
+        if (!auth()->user()->hasRole('kurikulum')) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        $jurnals = Jurnal::with([
+            'guru',
+            'kelas',
+            'jadwal.mapel'
+        ])
+        ->where('tipe', 'guru')
+        ->latest()
+        ->paginate(10);
+
+        $informasi = Informasi::latest()->first();
+
+        return view('guru.jurnals.index', compact(
+            'jurnals',
+            'informasi'
+        ));
+    }
+
     public function create()
     {
         $guru = Guru::where('user_id', auth()->id())->first();
@@ -373,6 +396,21 @@ class JurnalController extends Controller
                 $request->tanggal_akhir
             ),
             'jurnal-saya.xlsx'
+        );
+    }
+
+    public function exportAll(Request $request)
+    {
+        if (!auth()->user()->hasRole('kurikulum')) {
+            abort(403, 'Anda tidak memiliki akses.');
+        }
+
+        return Excel::download(
+            new AllJurnalsExport(
+                $request->tanggal_awal,
+                $request->tanggal_akhir
+            ),
+            'semua-jurnal-guru.xlsx'
         );
     }
 }

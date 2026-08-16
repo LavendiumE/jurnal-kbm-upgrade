@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use App\Exports\SiswaTerlambatExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Siswa;
 use Exception;
 
 class SiswaTerlambatController extends Controller
@@ -25,12 +26,20 @@ class SiswaTerlambatController extends Controller
 
     public function create()
     {
-        $kelas = Kelas::all();
+        $kelas = Kelas::orderBy('nama')->get();
+
+        $siswa = Siswa::orderBy('nama')->get();
+
         $gurus = Guru::whereHas('user', function ($query) {
                     $query->where('is_active', true);
-                })->orderBy('nama')->get();
+                })
+                ->orderBy('nama')
+                ->get();
 
-        return view('piket.perizinan.siswa_terlambat.create', compact('kelas', 'gurus'));
+        return view(
+            'piket.perizinan.siswa_terlambat.create',
+            compact('kelas', 'siswa', 'gurus')
+        );
     }
 
     public function store(Request $request)
@@ -126,12 +135,21 @@ class SiswaTerlambatController extends Controller
     public function edit($id)
     {
         $data = SiswaTerlambat::findOrFail($id);
-        $kelas = Kelas::all();
+
+        $kelas = Kelas::orderBy('nama')->get();
+
+        $siswa = Siswa::orderBy('nama')->get();
+
         $gurus = Guru::whereHas('user', function ($query) {
                     $query->where('is_active', true);
-                })->orderBy('nama')->get();
+                })
+                ->orderBy('nama')
+                ->get();
 
-        return view('piket.perizinan.siswa_terlambat.edit', compact('data', 'kelas', 'gurus'));
+        return view(
+            'piket.perizinan.siswa_terlambat.edit',
+            compact('data', 'kelas', 'siswa', 'gurus')
+        );
     }
 
     public function update(Request $request, $id)

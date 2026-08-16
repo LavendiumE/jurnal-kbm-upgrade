@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SiswaIzinKeluarExport;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Siswa;
 use Exception;
 
 class SiswaIzinKeluarController extends Controller
@@ -23,9 +24,16 @@ class SiswaIzinKeluarController extends Controller
 
     public function create()
     {
-        $kelas = Kelas::all();
+        $kelas = Kelas::orderBy('nama')->get();
 
-        return view('piket.perizinan.izin_keluar.create', compact('kelas'));
+        $siswa = Siswa::with('kelas')
+            ->orderBy('nama')
+            ->get();
+
+        return view(
+            'piket.perizinan.izin_keluar.create',
+            compact('kelas', 'siswa')
+        );
     }
 
     public function store(Request $request)
@@ -124,9 +132,15 @@ class SiswaIzinKeluarController extends Controller
     public function edit($id)
     {
         $data = SiswaIzinKeluar::findOrFail($id);
-        $kelas = Kelas::all();
 
-        return view('piket.perizinan.izin_keluar.edit', compact('data', 'kelas'));
+        $kelas = Kelas::orderBy('nama')->get();
+
+        $siswa = Siswa::orderBy('nama')->get();
+
+        return view(
+            'piket.perizinan.izin_keluar.edit',
+            compact('data', 'kelas', 'siswa')
+        );
     }
 
     public function update(Request $request, $id)

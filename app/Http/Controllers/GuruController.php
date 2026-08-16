@@ -59,6 +59,25 @@ class GuruController extends Controller
         return back()->with('success', 'Akses guru piket berhasil diupdate');
     }
 
+    public function toggleKurikulum($id)
+    {
+        $user = User::findOrFail($id);
+
+        $kurikulumRole = Role::where('name', 'kurikulum')->first();
+
+        if (!$kurikulumRole) {
+            return back()->with('error', 'Role kurikulum belum tersedia');
+        }
+
+        if ($user->hasRole('kurikulum')) {
+            $user->roles()->detach($kurikulumRole->id);
+        } else {
+            $user->roles()->syncWithoutDetaching([$kurikulumRole->id]);
+        }
+
+        return back()->with('success', 'Akses guru kurikulum berhasil diupdate');
+    }
+
     public function toggleActive($id)
     {
         $user = User::findOrFail($id);

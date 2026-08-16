@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\SiswaPulangAwalExport;
 use Illuminate\Support\Facades\Storage;
+use App\Models\Siswa;
 use Exception;
 
 class SiswaPulangAwalController extends Controller
@@ -21,9 +22,14 @@ class SiswaPulangAwalController extends Controller
 
     public function create()
     {
-        $kelas = Kelas::all();
+        $kelas = Kelas::orderBy('nama')->get();
 
-        return view('piket.perizinan.pulang_awal.create', compact('kelas'));
+        $siswa = Siswa::orderBy('nama')->get();
+
+        return view(
+            'piket.perizinan.pulang_awal.create',
+            compact('kelas', 'siswa')
+        );
     }
 
     public function store(Request $request)
@@ -116,9 +122,15 @@ class SiswaPulangAwalController extends Controller
     public function edit($id)
     {
         $izin = SiswaPulangAwal::findOrFail($id);
-        $kelas = Kelas::all();
 
-        return view('piket.perizinan.pulang_awal.edit', compact('izin', 'kelas'));
+        $kelas = Kelas::orderBy('nama')->get();
+
+        $siswa = Siswa::orderBy('nama')->get();
+
+        return view(
+            'piket.perizinan.pulang_awal.edit',
+            compact('izin', 'kelas', 'siswa')
+        );
     }
 
     public function update(Request $request, $id)

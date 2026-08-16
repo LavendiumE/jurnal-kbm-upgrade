@@ -317,6 +317,32 @@
                 </a>
             </li>
 
+            {{-- DATA SISWA --}}
+            <li>
+                <a href="{{ route('admin.siswa.index') }}"
+                class="flex items-center px-3 py-2 rounded-lg
+                {{ request()->routeIs('admin.siswa.*')
+                        ? 'bg-gray-100 text-blue-600'
+                        : 'hover:bg-gray-100 text-gray-700' }}">
+
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="w-5 h-5 mr-3">
+
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.37 9.37 0 0 0 2.25-.273V7.5a9 9 0 0 0-9-9 9 9 0 0 0-9 9v11.727a9.37 9.37 0 0 0 2.25.273c.926 0 1.813-.135 2.625-.372M15 19.128v-3.75a3.75 3.75 0 0 0-7.5 0v3.75M15 19.128c-1.147.416-2.373.642-3.75.642s-2.603-.226-3.75-.642M12 7.5a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" />
+
+                    </svg>
+
+                    <span>Data Siswa</span>
+
+                </a>
+            </li>
+
             {{-- PENGATURAN TITLE --}}
             <li class="pt-4">
                 <p class="px-3 text-xs font-semibold uppercase tracking-wider text-gray-400">

@@ -34,6 +34,8 @@ use App\Http\Controllers\Admin\JurnalSettingController;
 use App\Http\Controllers\Admin\JamPelajaranController;
 use App\Http\Controllers\Admin\AdminJurnalPiketController;
 
+use App\Http\Controllers\SiswaController;
+
 /*
 |--------------------------------------------------------------------------
 | ACCESS GATE
@@ -127,6 +129,16 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/jurnals/export/all', [JurnalController::class, 'exportAll'])
             ->name('guru.jurnals.export.all');
+        
+        // =====================================================
+        // GURU KURIKULUM
+        // =====================================================
+
+        Route::get('/kurikulum/jurnal', [JurnalController::class, 'indexKurikulum'])
+            ->name('guru.kurikulum.jurnals.index');
+
+        Route::get('/kurikulum/jurnal/export', [JurnalController::class, 'exportAll'])
+            ->name('guru.kurikulum.jurnals.export');
 
     });
 
@@ -275,6 +287,44 @@ Route::middleware(['auth'])->group(function () {
             return view('admin.master-data');
         })->name('admin.master-data');
 
+        /*
+        |--------------------------------------------------------------------------
+        | MASTER DATA SISWA
+        |--------------------------------------------------------------------------
+        */
+
+        // Daftar kelas
+        Route::get('/siswa', [SiswaController::class, 'index'])
+            ->name('admin.siswa.index');
+
+        // Detail siswa berdasarkan kelas
+        Route::get('/siswa/kelas/{kelas_id}', [SiswaController::class, 'kelas'])
+            ->name('admin.siswa.kelas');
+
+        // Import siswa dari Excel
+        Route::post('/siswa/import', [SiswaController::class, 'import'])
+            ->name('admin.siswa.import');
+
+        // Tambah siswa
+        Route::get('/siswa/create/{kelas_id}', [SiswaController::class, 'create'])
+            ->name('admin.siswa.create');
+
+        // Simpan siswa
+        Route::post('/siswa', [SiswaController::class, 'store'])
+            ->name('admin.siswa.store');
+
+        // Edit siswa
+        Route::get('/siswa/{id}/edit', [SiswaController::class, 'edit'])
+            ->name('admin.siswa.edit');
+
+        // Update siswa
+        Route::put('/siswa/{id}', [SiswaController::class, 'update'])
+            ->name('admin.siswa.update');
+
+        // Hapus siswa
+        Route::delete('/siswa/{id}', [SiswaController::class, 'destroy'])
+            ->name('admin.siswa.destroy');
+
         Route::get('/kelas', [KelasController::class, 'index'])->name('admin.kelas.index');
         Route::post('/kelas', [KelasController::class, 'store'])->name('admin.kelas.store');
         Route::delete('/kelas/{id}', [KelasController::class, 'destroy'])->name('admin.kelas.destroy');
@@ -298,6 +348,9 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/gurus/{id}/toggle-piket', [GuruController::class, 'togglePiket'])
             ->name('admin.gurus.toggle-piket');
+    
+        Route::post('/gurus/{id}/toggle-kurikulum', [GuruController::class, 'toggleKurikulum'])
+            ->name('admin.gurus.toggle-kurikulum');
 
         Route::post('/informasi', [InformasiController::class, 'store'])->name('admin.informasi.store');
         Route::delete('/informasi/{id}', [InformasiController::class, 'destroy'])->name('admin.informasi.destroy');
