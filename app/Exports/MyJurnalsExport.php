@@ -30,7 +30,8 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'guru.user',
             'kelas',
             'jadwal.ruangan',
-            'jadwal.mapel'
+            'jadwal.mapel',
+            'absensis',
         ])
         ->where('guru_id', $this->guruId)
         ->orderBy('created_at', 'asc');
@@ -52,6 +53,23 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
                 ? asset('storage/' . $jurnal->foto)
                 : '';
 
+            // Format metode PJJ
+            $metodePjj = $jurnal->is_daring
+                ? collect($jurnal->pjj_menggunakan ?? [])
+                    ->map(function ($metode) {
+                        return match ($metode) {
+                            'wag' => 'WhatsApp Group (WAG)',
+                            'google_meet' => 'Google Meet',
+                            'zoom' => 'Zoom',
+                            'google_classroom' => 'Google Classroom',
+                            'lms' => 'LMS',
+                            'lainnya' => 'Lainnya',
+                            default => $metode,
+                        };
+                    })
+                    ->implode(', ')
+                : '-';
+
             return [
 
                 'Tanggal' =>
@@ -70,6 +88,15 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
                 'Ruang' =>
                     $jurnal->jadwal->ruangan->nama ?? '-',
 
+                'PJJ / Daring' =>
+                    $jurnal->is_daring ? 'Ya' : 'Tidak',
+
+                'Metode PJJ' =>
+                    $metodePjj,
+
+                'PJJ Lainnya' =>
+                    $jurnal->pjj_lainnya ?? '-',
+
                 'Guru' =>
                     $jurnal->guru->nama ?? '-',
 
@@ -83,19 +110,34 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
                     $jurnal->kegiatan ?? '-',
 
                 'Hadir' =>
-                    $jurnal->hadir ?? 0,
+                    $jurnal->absensis
+                        ->where('status', 'hadir')
+                        ->count(),
 
                 'Izin' =>
-                    $jurnal->izin ?? 0,
+                    $jurnal->absensis
+                        ->where('status', 'izin')
+                        ->count(),
 
                 'Sakit' =>
-                    $jurnal->sakit ?? 0,
+                    $jurnal->absensis
+                        ->where('status', 'sakit')
+                        ->count(),
 
                 'Alfa' =>
-                    $jurnal->alfa ?? 0,
+                    $jurnal->absensis
+                        ->where('status', 'alfa')
+                        ->count(),
 
                 'PKL' =>
-                    $jurnal->pkl ?? 0,
+                    $jurnal->absensis
+                        ->where('status', 'pkl')
+                        ->count(),
+
+                'Dispensasi' =>
+                    $jurnal->absensis
+                        ->where('status', 'dispensasi')
+                        ->count(),
 
                 'Foto' => $fotoUrl,
             ];
@@ -110,6 +152,9 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Jam Selesai',
             'Kelas',
             'Ruang',
+            'PJJ / Daring',
+            'Metode PJJ',
+            'PJJ Lainnya',
             'Guru',
             'Mata Pelajaran',
             'Materi',
@@ -119,6 +164,7 @@ class MyJurnalsExport implements FromCollection, WithHeadings, ShouldAutoSize
             'Sakit',
             'Alfa',
             'PKL',
+            'Dispensasi',
             'Foto',
         ];
     }

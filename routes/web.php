@@ -130,6 +130,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/jurnals/export/all', [JurnalController::class, 'exportAll'])
             ->name('guru.jurnals.export.all');
         
+        Route::get(
+            '/jurnals/{jurnal}/export-absensi',
+            [JurnalController::class, 'exportAbsensi']
+        )->name('guru.jurnals.export-absensi');
+
+        Route::get(
+            '/jurnals/{jurnal}',
+            [JurnalController::class, 'show']
+        )->name('guru.jurnals.show');
+        
         // =====================================================
         // GURU KURIKULUM
         // =====================================================
@@ -139,6 +149,11 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/kurikulum/jurnal/export', [JurnalController::class, 'exportAll'])
             ->name('guru.kurikulum.jurnals.export');
+
+        Route::get('/jurnals/siswa/{jadwalId}', [JurnalController::class, 'getSiswaByJadwal'])
+            ->name('guru.jurnals.siswa');
+
+        
 
     });
 

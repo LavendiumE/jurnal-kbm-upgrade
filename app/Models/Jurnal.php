@@ -13,12 +13,25 @@ class Jurnal extends Model
         'tipe',
         'materi',
         'kegiatan',
+
+        // PJJ / Daring
+        'is_daring',
+        'pjj_menggunakan',
+        'pjj_lainnya',
+
+        // Rekap Absensi
         'hadir',
         'izin',
         'sakit',
         'alfa',
         'pkl',
+
         'foto',
+    ];
+
+    protected $casts = [
+        'is_daring' => 'boolean',
+        'pjj_menggunakan' => 'array',
     ];
 
     public function guru()
@@ -34,5 +47,10 @@ class Jurnal extends Model
     public function jadwal()
     {
         return $this->belongsTo(Jadwal::class);
+    }
+
+    public function absensis()
+    {
+        return $this->hasMany(JurnalAbsensi::class);
     }
 }

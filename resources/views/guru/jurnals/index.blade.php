@@ -2,9 +2,6 @@
 
 @section('content')
 
-@php
-    $isKurikulum = auth()->user()->hasRole('kurikulum');
-@endphp
 
 <div class="sm:ml-64 pt-20 px-6 pb-8">
 
@@ -276,9 +273,21 @@
 
                                         {{-- EDIT --}}
                                         <a href="{{ route('guru.jurnals.edit', $jurnal->id) }}"
-                                           class="text-blue-600 hover:underline">
-
+                                        class="text-blue-600 hover:underline">
                                             Edit
+                                        </a>
+
+                                        <span class="text-gray-400">
+                                            |
+                                        </span>
+
+
+                                        {{-- EXPORT ABSENSI --}}
+                                        <a href="{{ route('guru.jurnals.export-absensi', $jurnal->id) }}"
+                                        class="text-green-600 hover:underline"
+                                        title="Export Absensi">
+
+                                            Export Absensi
 
                                         </a>
 

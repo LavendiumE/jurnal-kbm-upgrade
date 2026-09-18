@@ -14,6 +14,10 @@ use App\Exports\MyJurnalsExport;
 use App\Models\Informasi;
 use App\Models\Setting;
 use Carbon\Carbon;
+use App\Models\Siswa;
+use App\Models\JurnalAbsensi;
+use App\Exports\JurnalAbsensiExport;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class JurnalController extends Controller
@@ -39,9 +43,13 @@ class JurnalController extends Controller
                 ->latest()
                 ->paginate(10);
         }
+
         $informasi = Informasi::latest()->first();
 
-        return view('guru.jurnals.index', compact('jurnals', 'informasi'));
+        return view('guru.jurnals.index', compact(
+            'jurnals',
+            'informasi'
+        ))->with('isKurikulum', false);
     }
 
     public function indexKurikulum()
@@ -64,7 +72,7 @@ class JurnalController extends Controller
         return view('guru.jurnals.index', compact(
             'jurnals',
             'informasi'
-        ));
+        ))->with('isKurikulum', true);
     }
 
     public function create()
@@ -109,30 +117,60 @@ class JurnalController extends Controller
                 return now()->lte($deadline);
             });
 
-        return view('guru.jurnals.create', compact('jadwals'));
+        $kelasIds = $jadwals->pluck('kelas_id')->unique();
+
+        $siswas = Siswa::whereIn('kelas_id', $kelasIds)
+            ->orderBy('nama')
+            ->get();
+
+        return view('guru.jurnals.create', compact('jadwals', 'siswas'));
     }
 
     public function store(Request $request)
     {
+        // =========================
+        // VALIDASI REQUEST
+        // =========================
         $validated = $request->validate([
-            'jadwal_id' => 'required',
+            'jadwal_id' => 'required|exists:jadwals,id',
             'materi' => 'required',
             'kegiatan' => 'required',
-            'hadir' => 'required|integer',
-            'izin' => 'nullable|string',
-            'sakit' => 'nullable|string',
-            'alfa' => 'nullable|string',
-            'pkl' => 'nullable|string',
+
             'foto' => 'nullable|image|max:10240',
             'file_izin_guru' => 'nullable|file|max:2048',
+
+            // PJJ / DARING
+            'is_daring' => 'nullable|boolean',
+            'pjj_menggunakan' => 'nullable|array',
+            'pjj_menggunakan.*' => 'in:wag,google_meet,zoom,google_classroom,lms,lainnya',
+            'pjj_lainnya' => 'nullable|string|max:255',
+
+            // ABSENSI
+            'absensi' => 'required|array|min:1',
+            'absensi.*.status' => 'required|in:hadir,izin,sakit,alfa,pkl,dispensasi',
+            'absensi.*.alasan' => 'nullable|string',
         ]);
 
+
         $guru = Guru::where('user_id', Auth::id())->first();
+
+        if (!$guru) {
+            return back()
+                ->withInput()
+                ->with('error', 'Akun guru belum terhubung ke data guru.');
+        }
+
+
         $jadwal = Jadwal::findOrFail($request->jadwal_id);
 
+
+        // =========================
+        // VALIDASI GURU
+        // =========================
         if ($jadwal->guru_id != $guru->id) {
             abort(403, 'Jadwal tidak valid.');
         }
+
 
         // =========================
         // VALIDASI HARI
@@ -154,12 +192,13 @@ class JurnalController extends Controller
                 ->with('error', 'Jurnal hanya dapat diisi sesuai jadwal pada hari ini.');
         }
 
+
         // =========================
         // VALIDASI BATAS WAKTU
         // =========================
         $setting = Setting::first();
 
-       $defaultMenit = $setting->toleransi_jurnal ?? 30;
+        $defaultMenit = $setting->toleransi_jurnal ?? 30;
 
         $menit = $jadwal->use_default_batas_jurnal
             ? $defaultMenit
@@ -175,14 +214,111 @@ class JurnalController extends Controller
                 ->with('error', 'Batas waktu upload jurnal untuk jadwal ini sudah berakhir.');
         }
 
-        // =========================
-        // SIMPAN JURNAL
-        // =========================
-        $validated['guru_id'] = $guru->id;
-        $validated['kelas_id'] = $jadwal->kelas_id;
-        $validated['jadwal_id'] = $jadwal->id;
-        $validated['tipe'] = 'guru';
 
+        // =========================
+        // VALIDASI PJJ / DARING
+        // =========================
+        $isDaring = $request->boolean('is_daring');
+
+        $pjjMenggunakan = $request->input('pjj_menggunakan', []);
+
+        if (!$isDaring) {
+            $pjjMenggunakan = [];
+        }
+
+        if ($isDaring && empty($pjjMenggunakan)) {
+            return back()
+                ->withInput()
+                ->with('error', 'Silakan pilih minimal satu metode PJJ.');
+        }
+
+        $pjjLainnya = null;
+
+        if ($isDaring && in_array('lainnya', $pjjMenggunakan)) {
+
+            $pjjLainnya = trim($request->input('pjj_lainnya', ''));
+
+            if ($pjjLainnya === '') {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Silakan isi metode PJJ lainnya.');
+            }
+        }
+
+
+        // =========================
+        // VALIDASI SISWA
+        // =========================
+        $siswaIds = array_keys($request->absensi);
+
+        // Ambil semua siswa dari kelas jadwal
+        $jumlahSiswaKelas = Siswa::where('kelas_id', $jadwal->kelas_id)
+            ->count();
+
+        // Pastikan jumlah siswa yang diabsen lengkap
+        if (count($siswaIds) !== $jumlahSiswaKelas) {
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Absensi belum lengkap. Semua siswa dalam kelas harus diabsen.'
+                );
+        }
+
+
+        // Pastikan semua siswa memang berasal dari kelas tersebut
+        $jumlahSiswaValid = Siswa::whereIn('id', $siswaIds)
+            ->where('kelas_id', $jadwal->kelas_id)
+            ->count();
+
+        if ($jumlahSiswaValid !== count($siswaIds)) {
+            return back()
+                ->withInput()
+                ->with('error', 'Data absensi siswa tidak valid.');
+        }
+
+
+        // =========================
+        // VALIDASI ALASAN
+        // =========================
+        foreach ($request->absensi as $siswaId => $absen) {
+
+            if (
+                $absen['status'] !== 'hadir' &&
+                empty(trim($absen['alasan'] ?? ''))
+            ) {
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Alasan wajib diisi untuk siswa yang tidak hadir.'
+                    );
+            }
+        }
+
+
+        // =========================
+        // DATA JURNAL
+        // =========================
+        $jurnalData = [
+            'guru_id' => $guru->id,
+            'kelas_id' => $jadwal->kelas_id,
+            'jadwal_id' => $jadwal->id,
+            'tipe' => 'guru',
+
+            'materi' => $validated['materi'],
+            'kegiatan' => $validated['kegiatan'],
+
+            // PJJ / DARING
+            'is_daring' => $isDaring,
+            'pjj_menggunakan' => $isDaring ? $pjjMenggunakan : null,
+            'pjj_lainnya' => $pjjLainnya,
+        ];
+
+
+        // =========================
+        // FOTO
+        // =========================
         if ($request->hasFile('foto')) {
 
             $file = $request->file('foto');
@@ -191,17 +327,22 @@ class JurnalController extends Controller
             $mime = $imageInfo['mime'];
 
             if ($mime === 'image/jpeg') {
+
                 $source = imagecreatefromjpeg($file->getPathname());
 
             } elseif ($mime === 'image/png') {
+
                 $source = imagecreatefrompng($file->getPathname());
 
             } elseif ($mime === 'image/webp') {
+
                 $source = imagecreatefromwebp($file->getPathname());
 
             } else {
+
                 throw new Exception('Format gambar tidak didukung.');
             }
+
 
             $width = imagesx($source);
             $height = imagesy($source);
@@ -214,7 +355,12 @@ class JurnalController extends Controller
                 $newHeight = $height;
             }
 
-            $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+            $canvas = imagecreatetruecolor(
+                $newWidth,
+                $newHeight
+            );
+
 
             imagecopyresampled(
                 $canvas,
@@ -229,34 +375,77 @@ class JurnalController extends Controller
                 $height
             );
 
+
             $folder = 'jurnal-guru/' . now()->format('Y-m');
             $filename = uniqid('jurnal_') . '.jpg';
 
+
             ob_start();
-            imagejpeg($canvas, null, 75);
+
+            imagejpeg(
+                $canvas,
+                null,
+                75
+            );
+
             $imageData = ob_get_clean();
+
 
             Storage::disk('public')->put(
                 $folder . '/' . $filename,
                 $imageData
             );
 
+
             imagedestroy($source);
             imagedestroy($canvas);
 
-            $validated['foto'] = $folder . '/' . $filename;
+
+            $jurnalData['foto'] =
+                $folder . '/' . $filename;
         }
 
-        Jurnal::create($validated);
+
+        // =========================
+        // SIMPAN JURNAL + ABSENSI
+        // =========================
+        DB::transaction(function () use ($jurnalData, $request) {
+
+            $jurnal = Jurnal::create($jurnalData);
+
+
+            foreach ($request->absensi as $siswaId => $absen) {
+
+                JurnalAbsensi::create([
+                    'jurnal_id' => $jurnal->id,
+                    'siswa_id' => $siswaId,
+                    'status' => $absen['status'],
+                    'alasan' => $absen['alasan'] ?? null,
+                ]);
+            }
+
+        });
+
 
         return redirect()
             ->route('guru.jurnals.index')
-            ->with('success', 'Jurnal berhasil ditambahkan');
+            ->with(
+                'success',
+                'Jurnal dan absensi berhasil ditambahkan'
+            );
     }
 
     public function edit(Jurnal $jurnal)
     {
         abort_if($jurnal->tipe !== 'guru', 404);
+
+        $jurnal->load([
+            'kelas',
+            'kelas.siswa',
+            'jadwal.ruangan',
+            'jadwal.mapel',
+            'absensis.siswa',
+        ]);
 
         return view('guru.jurnals.edit', compact('jurnal'));
     }
@@ -265,54 +454,232 @@ class JurnalController extends Controller
     {
         abort_if($jurnal->tipe !== 'guru', 404);
 
+        // =========================
+        // VALIDASI
+        // =========================
         $validated = $request->validate([
             'materi' => 'required|string',
             'kegiatan' => 'nullable|string',
-            'hadir' => 'nullable|integer|min:0',
-            'izin' => 'nullable|integer|min:0',
-            'sakit' => 'nullable|integer|min:0',
-            'alfa' => 'nullable|integer|min:0',
-            'pkl' => 'nullable|string',
+
+            // PJJ / DARING
+            'is_daring' => 'nullable|boolean',
+            'pjj_menggunakan' => 'nullable|array',
+            'pjj_menggunakan.*' => 'in:wag,google_meet,zoom,google_classroom,lms,lainnya',
+            'pjj_lainnya' => 'nullable|string|max:255',
+
+            // ABSENSI
+            'absensi' => 'required|array|min:1',
+            'absensi.*.status' => 'required|in:hadir,izin,sakit,alfa,pkl,dispensasi',
+            'absensi.*.alasan' => 'nullable|string',
+
             'foto' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
-            'file_izin_guru' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+
+            'file_izin_guru' =>
+                'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+
+        // =========================
+        // VALIDASI PJJ / DARING
+        // =========================
+        $isDaring = $request->boolean('is_daring');
+
+        $pjjMenggunakan = $request->input('pjj_menggunakan', []);
+
+        if (!$isDaring) {
+            $pjjMenggunakan = [];
+        }
+
+        if ($isDaring && empty($pjjMenggunakan)) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Silakan pilih minimal satu metode PJJ.'
+                );
+        }
+
+
+        $pjjLainnya = null;
+
+        if (
+            $isDaring &&
+            in_array('lainnya', $pjjMenggunakan)
+        ) {
+
+            $pjjLainnya = trim(
+                $request->input('pjj_lainnya', '')
+            );
+
+            if ($pjjLainnya === '') {
+
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Silakan isi metode PJJ lainnya.'
+                    );
+            }
+        }
+
+
+        // =========================
+        // VALIDASI SISWA
+        // =========================
+        $siswaIds = array_keys($request->absensi);
+
+        $jumlahSiswaKelas = Siswa::where(
+            'kelas_id',
+            $jurnal->kelas_id
+        )->count();
+
+        if (count($siswaIds) !== $jumlahSiswaKelas) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Absensi belum lengkap. Semua siswa dalam kelas harus diabsen.'
+                );
+        }
+
+
+        $jumlahSiswaValid = Siswa::whereIn(
+            'id',
+            $siswaIds
+        )
+            ->where(
+                'kelas_id',
+                $jurnal->kelas_id
+            )
+            ->count();
+
+        if (
+            $jumlahSiswaValid !== count($siswaIds)
+        ) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Data absensi siswa tidak valid.'
+                );
+        }
+
+
+        // =========================
+        // VALIDASI ALASAN
+        // =========================
+        foreach (
+            $request->absensi as $siswaId => $absen
+        ) {
+
+            if (
+                $absen['status'] !== 'hadir' &&
+                empty(
+                    trim(
+                        $absen['alasan'] ?? ''
+                    )
+                )
+            ) {
+
+                return back()
+                    ->withInput()
+                    ->with(
+                        'error',
+                        'Alasan wajib diisi untuk siswa yang tidak hadir.'
+                    );
+            }
+        }
+
+
+        // =========================
+        // DATA JURNAL
+        // =========================
+        $jurnalData = [
+            'materi' => $validated['materi'],
+            'kegiatan' => $validated['kegiatan'],
+
+            // PJJ / DARING
+            'is_daring' => $isDaring,
+            'pjj_menggunakan' => $isDaring
+                ? $pjjMenggunakan
+                : null,
+            'pjj_lainnya' => $pjjLainnya,
+        ];
+
+
+        // =========================
+        // FOTO
+        // =========================
         if ($request->hasFile('foto')) {
 
             if ($jurnal->foto) {
-                Storage::disk('public')->delete($jurnal->foto);
+
+                Storage::disk('public')
+                    ->delete($jurnal->foto);
             }
+
 
             $file = $request->file('foto');
 
-            $imageInfo = getimagesize($file->getPathname());
+            $imageInfo = getimagesize(
+                $file->getPathname()
+            );
+
             $mime = $imageInfo['mime'];
 
+
             if ($mime === 'image/jpeg') {
-                $source = imagecreatefromjpeg($file->getPathname());
+
+                $source = imagecreatefromjpeg(
+                    $file->getPathname()
+                );
 
             } elseif ($mime === 'image/png') {
-                $source = imagecreatefrompng($file->getPathname());
+
+                $source = imagecreatefrompng(
+                    $file->getPathname()
+                );
 
             } elseif ($mime === 'image/webp') {
-                $source = imagecreatefromwebp($file->getPathname());
+
+                $source = imagecreatefromwebp(
+                    $file->getPathname()
+                );
 
             } else {
-                throw new Exception('Format gambar tidak didukung.');
+
+                throw new Exception(
+                    'Format gambar tidak didukung.'
+                );
             }
+
 
             $width = imagesx($source);
             $height = imagesy($source);
 
+
             $newWidth = 1280;
-            $newHeight = intval($height * ($newWidth / $width));
+
+            $newHeight = intval(
+                $height * ($newWidth / $width)
+            );
+
 
             if ($width < 1280) {
+
                 $newWidth = $width;
                 $newHeight = $height;
             }
 
-            $canvas = imagecreatetruecolor($newWidth, $newHeight);
+
+            $canvas = imagecreatetruecolor(
+                $newWidth,
+                $newHeight
+            );
+
 
             imagecopyresampled(
                 $canvas,
@@ -327,37 +694,105 @@ class JurnalController extends Controller
                 $height
             );
 
-            $folder = 'jurnal-guru/' . now()->format('Y-m');
-            $filename = uniqid('jurnal_') . '.jpg';
+
+            $folder =
+                'jurnal-guru/' .
+                now()->format('Y-m');
+
+            $filename =
+                uniqid('jurnal_') .
+                '.jpg';
+
 
             ob_start();
-            imagejpeg($canvas, null, 75);
-            $imageData = ob_get_clean();
+
+            imagejpeg(
+                $canvas,
+                null,
+                75
+            );
+
+            $imageData =
+                ob_get_clean();
+
 
             Storage::disk('public')->put(
                 $folder . '/' . $filename,
                 $imageData
             );
 
+
             imagedestroy($source);
             imagedestroy($canvas);
 
-            $validated['foto'] = $folder . '/' . $filename;
+
+            $jurnalData['foto'] =
+                $folder . '/' . $filename;
         }
 
+
+        // =========================
+        // FILE IZIN GURU
+        // =========================
         if ($request->hasFile('file_izin_guru')) {
+
             if ($jurnal->file_izin_guru) {
-                Storage::disk('public')->delete($jurnal->file_izin_guru);
+
+                Storage::disk('public')
+                    ->delete(
+                        $jurnal->file_izin_guru
+                    );
             }
 
-            $validated['file_izin_guru'] = $request->file('file_izin_guru')->store('izin-guru', 'public');
+
+            $jurnalData['file_izin_guru'] =
+                $request
+                    ->file('file_izin_guru')
+                    ->store(
+                        'izin-guru',
+                        'public'
+                    );
         }
 
-        $jurnal->update($validated);
+
+        // =========================
+        // UPDATE JURNAL + ABSENSI
+        // =========================
+        DB::transaction(function () use (
+            $jurnal,
+            $jurnalData,
+            $request
+        ) {
+
+            // Update jurnal utama
+            $jurnal->update($jurnalData);
+
+
+            // Hapus absensi lama
+            $jurnal->absensis()->delete();
+
+
+            // Simpan absensi terbaru
+            foreach (
+                $request->absensi as $siswaId => $absen
+            ) {
+
+                JurnalAbsensi::create([
+                    'jurnal_id' => $jurnal->id,
+                    'siswa_id' => $siswaId,
+                    'status' => $absen['status'],
+                    'alasan' => $absen['alasan'] ?? null,
+                ]);
+            }
+        });
+
 
         return redirect()
             ->route('guru.jurnals.index')
-            ->with('success', 'Jurnal berhasil diupdate');
+            ->with(
+                'success',
+                'Jurnal dan absensi berhasil diupdate'
+            );
     }
 
     public function destroy(Jurnal $jurnal)
@@ -411,6 +846,33 @@ class JurnalController extends Controller
                 $request->tanggal_akhir
             ),
             'semua-jurnal-guru.xlsx'
+        );
+    }
+
+    public function getSiswaByJadwal($jadwalId)
+    {
+        $jadwal = Jadwal::with('kelas')->findOrFail($jadwalId);
+
+        $siswa = Siswa::where('kelas_id', $jadwal->kelas_id)
+            ->orderBy('nama')
+            ->get();
+
+        return response()->json($siswa);
+    }
+
+    public function exportAbsensi(Jurnal $jurnal)
+    {
+        abort_if($jurnal->tipe !== 'guru', 404);
+
+        $guru = Guru::where('user_id', Auth::id())->first();
+
+        if (!$guru || $jurnal->guru_id !== $guru->id) {
+            abort(403, 'Jurnal tidak valid.');
+        }
+
+        return Excel::download(
+            new JurnalAbsensiExport($jurnal->id),
+            'absensi-jurnal-' . $jurnal->id . '.xlsx'
         );
     }
 }
